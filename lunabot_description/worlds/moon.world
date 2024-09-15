@@ -1,0 +1,190 @@
+<sdf version='1.6'>
+  <world name='moon'>
+    <scene>
+      <background>0 0 0 255</background>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <shadows>1</shadows>
+      <grid>0</grid>
+      <origin_visual>0</origin_visual>
+      <sky>
+        <time>24</time>
+        <clouds>
+          <humidity>0.0001</humidity>
+          <mean_size>0.0001</mean_size>
+          <ambient>0 0 0 1</ambient>
+        </clouds>
+      </sky>
+    </scene>
+
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- DEM of moon surface -->
+    <include>
+      <uri>model://dem_moon</uri>
+      <friction>
+        <mu> 0.01 </mu>
+        <mu2> 0.01 </mu2>
+      </friction>
+    </include> 
+    
+    <include>
+      <name>rock_small_0</name>
+      <uri>model://rock_small</uri>
+      <pose>-20 -13 0.1 0 0 0 1</pose>
+    </include>
+
+    <include>
+      <name>rock_small_1</name>
+      <uri>model://rock_small</uri>
+      <pose>-18 -5 0.1 0 0 0 1</pose>
+    </include>
+    
+    <include>
+      <name>rock_small_2</name>
+      <uri>model://rock_small</uri>
+      <pose>-19 2 0.1 0 0 0 1</pose>
+    </include>
+
+    <include>
+      <name>rock_large_alt_0</name>
+      <uri>model://rock_large_alt</uri>
+      <pose>-25.5 -6 0 0 0 0 1</pose>
+    </include>
+    
+    <include>
+      <name>rock_large_alt_1</name>
+      <uri>model://rock_large_alt</uri>
+      <pose>-42 -15 -0.1 0 0 0 1</pose>
+    </include>
+
+    <include>
+      <name>rock_large_alt_2</name>
+      <uri>model://rock_large_alt</uri>
+      <pose>-60.0708 -18.8017 0 0 -0 0</pose>
+    </include>
+
+    <include>
+      <name>rock_large_alt_3</name>
+      <uri>model://rock_large_alt</uri>
+      <pose>-73.7845 -33.3042 -0.1 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>rock_large_alt_4</name>
+      <uri>model://rock_large_alt</uri>
+      <pose>-64.0217 -5.00256 0 0 0 -2.0233</pose>
+    </include>
+
+    <include>
+      <name>rock_large_alt_5</name>
+      <uri>model://rock_large_alt</uri>
+      <pose>-30.6179 7.59373 -0.1 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>rock_large_alt_6</name>
+      <uri>model://rock_large_alt</uri>
+      <pose>-66.8079 -41.3161 -0.1 0 0 -1.32203</pose>
+    </include>
+    
+    <include>
+      <name>rock_large_0</name>
+      <uri>model://rock_large</uri>
+      <pose>28 -2 -0.1 0 0 0 1</pose>
+    </include>
+    
+    <include>
+      <name>rock_large_1</name>
+      <uri>model://rock_large</uri>
+      <pose>-13.5 -16.7 -0.1 0 0 0 1</pose>
+    </include>
+
+    <include>
+      <name>rock_large_2</name>
+      <uri>model://rock_large</uri>
+      <pose>-44.3403 0.30004 -0.1 0 -0 0</pose>
+    </include>
+
+    <include>
+      <name>rock_large_3</name>
+      <uri>model://rock_large</uri>
+      <pose>-78.2724 3.00211 -0.1 0 -0 0.74589</pose>
+    </include>
+
+    <include>
+      <name>rock_large_4</name>
+      <uri>model://rock_large</uri>
+      <pose>-79.7882 -11.3205 -0.1 0 -0 0.74589</pose>
+    </include>
+
+    <include>
+      <name>lunar_lander_0</name>
+      <uri>model://lunar_lander</uri>
+      <pose>11 -12 0 0 0 0 1</pose>
+    </include>
+
+    <include>
+      <name>isru_processing_plant_0</name>
+      <uri>model://isru_processing_plant</uri>
+      <pose>-29 -29 -0.8 0 0 0 1</pose>
+    </include>
+
+    <include>
+      <name>solar_panels_0</name>
+      <uri>model://solar_panels</uri>
+      <pose>-52 -30 -0.01 0 0 0 1</pose>
+    </include>
+
+    <include>
+      <name>solar_panels_1</name>
+      <uri>model://solar_panels</uri>
+      <pose>-52 -34 -0.01 0 0 0 1</pose>
+    </include>
+
+    <include>
+      <name>solar_panels_2</name>
+      <uri>model://solar_panels</uri>
+      <pose>-52 -38 -0.01 0 0 0 1</pose>
+    </include>
+
+    <include>
+      <name>moon_habitat_0</name>
+      <uri>model://moon_habitat</uri>
+      <pose>53 -90 -1 0 0 0 1</pose>
+    </include>
+
+    <include>
+      <name>radio_tower_0</name>
+      <uri>model://radio_tower</uri>
+      <pose>-4 -95 -1 0 0 0 1</pose>
+    </include>
+    
+    <physics name='default_physics' default='0' type='ode'>
+      <max_step_size>0.01</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>100</real_time_update_rate>
+    </physics>
+
+    <gravity>0 0 -1.622</gravity>
+    <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
+    <atmosphere type='adiabatic'/>
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <latitude_deg>0</latitude_deg>
+      <longitude_deg>0</longitude_deg>
+      <elevation>0</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
+
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose frame=''>-44.307289 49.989849 6.400211 0 0.029796 -1.035819</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+  </world>
+</sdf>

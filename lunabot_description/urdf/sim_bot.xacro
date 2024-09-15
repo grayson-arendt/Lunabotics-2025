@@ -1,0 +1,416 @@
+<?xml version="1.0"?>
+<robot name="sim_bot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:include filename="common_properties.xacro" />
+
+  <!-- Base Link -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <mesh filename="file:///$(find lunabot_description)/meshes/base_link.stl" />
+      </geometry>
+      <origin xyz="0 0 0.085" rpy="0 0 0" />
+      <material name="light_grey" />
+    </visual>
+        <collision>
+      <geometry>
+        <mesh filename="file:///$(find lunabot_description)/meshes/base_link.stl" />
+      </geometry>
+      <origin xyz="0 0 0.085" rpy="0 0 0" />
+    </collision>
+      <inertial>
+    <mass value="5.0" />
+    <origin xyz="0 0 0.085" />
+    <inertia ixx="0.0833" ixy="0.0" ixz="0.0" iyy="0.1667" iyz="0.0" izz="0.2333" />
+  </inertial>
+  </link>
+
+  <gazebo reference="base_link">
+    <material>Gazebo/Grey</material>
+  </gazebo>
+
+    <link name="ebox_link">
+    <visual>
+      <geometry>
+        <mesh filename="file:///$(find lunabot_description)/meshes/ebox_link.stl" />
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <material name="white" />
+    </visual>
+        <collision>
+      <geometry>
+        <mesh filename="file:///$(find lunabot_description)/meshes/ebox_link.stl" />
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+    </collision>
+  </link>
+
+  <gazebo reference="ebox_link">
+    <material>Gazebo/White</material>
+  </gazebo>
+
+    <link name="nuc_link">
+    <visual>
+      <geometry>
+        <mesh filename="file:///$(find lunabot_description)/meshes/nuc_link.stl" />
+      </geometry>
+	    <origin xyz="0 0 0" rpy="${pi} 0 ${pi}" />
+      <material name="black" />
+    </visual>
+           <collision>
+      <geometry>
+        <mesh filename="file:///$(find lunabot_description)/meshes/nuc_link.stl" />
+      </geometry>
+      <origin xyz="0 0 0" rpy="${pi} 0 ${pi}" />
+    </collision>
+  </link>
+
+  <gazebo reference="nuc_link">
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+    <link name="lidar1_link">
+    <visual>
+      <geometry>
+        <mesh filename="file:///$(find lunabot_description)/meshes/lidar1_link.stl" />
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 -1.5708" />
+      <material name="black" />
+    </visual>
+      <collision>
+      <geometry>
+        <mesh filename="file:///$(find lunabot_description)/meshes/lidar1_link.stl" />
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 -1.5708" />
+    </collision>
+  </link>
+
+      <link name="lidar2_link">
+    <visual>
+      <geometry>
+        <mesh filename="file:///$(find lunabot_description)/meshes/lidar2_link.stl" />
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <material name="black" />
+    </visual>
+          <collision>
+      <geometry>
+        <mesh filename="file:///$(find lunabot_description)/meshes/lidar2_link.stl" />
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+    </collision>
+  </link>
+
+      <link name="d455_link">
+    <visual>
+      <geometry>
+        <mesh filename="file:///$(find lunabot_description)/meshes/camera_link.stl" />
+      </geometry>
+      <origin xyz="0 -0.1 0" rpy="0 0 0" />
+      <material name="camera_grey" />
+    </visual>
+          <collision>
+      <geometry>
+        <mesh filename="file:///$(find lunabot_description)/meshes/camera_link.stl" />
+      </geometry>
+      <origin xyz="0 -0.1 0" rpy="0 0 0" />
+    </collision>
+  </link>
+
+  <link name="d455_link_optical"></link>
+
+  <!-- Wheel Links -->
+  <link name="front_right_wheel_link">
+    <visual>
+      <geometry>
+        <mesh filename="file:///$(find lunabot_description)/meshes/wheel_link.stl" />
+      </geometry>
+      <origin xyz="0 0 0" rpy="1.5708 0 0" />
+      <material name="green" />
+    </visual>
+    <inertial>
+      <mass value="0.1" />
+      <origin xyz="0 0 0" />
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01" />
+    </inertial>
+          <collision>
+      <geometry>
+        <mesh filename="file:///$(find lunabot_description)/meshes/wheel_link.stl" />
+      </geometry>
+      <origin xyz="0 0 0" rpy="1.5708 0 0" />
+    </collision>
+  </link>
+
+    <gazebo reference="front_right_wheel_link">
+    <material>Gazebo/DarkGrey</material>
+  </gazebo>
+
+    <link name="front_left_wheel_link">
+    <visual>
+      <geometry>
+        <mesh filename="file:///$(find lunabot_description)/meshes/wheel_link.stl" />
+      </geometry>
+      <origin xyz="0 0 0" rpy="-1.5708 0 0" />
+      <material name="green" />
+    </visual>
+    <inertial>
+      <mass value="0.1" />
+      <origin xyz="0 0 0" />
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01" />
+    </inertial>
+      <collision>
+      <geometry>
+        <mesh filename="file:///$(find lunabot_description)/meshes/wheel_link.stl" />
+      </geometry>
+      <origin xyz="0 0 0" rpy="-1.5708 0 0" />
+    </collision>
+  </link>
+    <gazebo reference="front_left_wheel_link">
+    <material>Gazebo/DarkGrey</material>
+  </gazebo>
+
+    <link name="rear_right_wheel_link">
+    <visual>
+      <geometry>
+        <mesh filename="file:///$(find lunabot_description)/meshes/wheel_link.stl" />
+      </geometry>
+      <origin xyz="0 0 0" rpy="1.5708 0 0" />
+      <material name="green" />
+    </visual>
+    <inertial>
+      <mass value="0.1" />
+      <origin xyz="0 0 0" />
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01" />
+    </inertial>
+      <collision>
+      <geometry>
+        <mesh filename="file:///$(find lunabot_description)/meshes/wheel_link.stl" />
+      </geometry>
+      <origin xyz="0 0 0" rpy="1.5708 0 0" />
+    </collision>
+  </link>
+
+        <gazebo reference="rear_right_wheel_link">
+    <material>Gazebo/DarkGrey</material>
+  </gazebo>
+
+    <link name="rear_left_wheel_link">
+    <visual>
+      <geometry>
+        <mesh filename="file:///$(find lunabot_description)/meshes/wheel_link.stl" />
+      </geometry>
+      <origin xyz="0 0 0" rpy="-1.5708 0 0" />
+      <material name="green" />
+    </visual>
+
+    <inertial>
+      <mass value="0.1" />
+      <origin xyz="0 0 0" />
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01" />
+    </inertial>
+              <collision>
+      <geometry>
+        <mesh filename="file:///$(find lunabot_description)/meshes/wheel_link.stl" />
+      </geometry>
+      <origin xyz="0 0 0" rpy="-1.5708 0 0" />
+    </collision>
+  </link>
+
+  <gazebo reference="rear_left_wheel_link">
+    <material>Gazebo/DarkGrey</material>
+  </gazebo>
+
+ 	<joint name="base_rear_right_wheel_joint"
+		type="continuous">
+		<parent link="base_link" />
+		<child link="rear_right_wheel_link" />
+		<origin xyz="-0.19 -0.25 0.085"
+			rpy="0 0 0" />
+		<axis xyz="0 1 0" />
+	</joint>
+
+	<joint name="base_rear_left_wheel_joint"
+		type="continuous">
+		<parent link="base_link" />
+		<child link="rear_left_wheel_link" />
+		<origin xyz="-0.19 0.25 0.085"
+			rpy="0 0 0" />
+		<axis xyz="0 1 0" />
+	</joint>
+
+	<joint name="base_front_right_wheel_joint"
+		type="continuous">
+		<parent link="base_link" />
+		<child link="front_right_wheel_link" />
+		<origin xyz="0.28 -0.25 0.085"
+			rpy="0 0 0" />
+      <axis xyz="0 1 0" />
+	</joint>
+
+	<joint name="base_front_left_wheel_joint"
+		type="continuous">
+		<parent link="base_link" />
+		<child link="front_left_wheel_link" />
+		<origin xyz="0.28 0.25 0.085"
+			rpy="0 0 0" />
+      <axis xyz="0 1 0" />
+	</joint>
+
+	<joint name="base_lidar1_joint"
+		type="fixed">
+		<parent link="base_link" />
+		<child link="lidar1_link" />
+		<origin xyz="0.3630625 0 0.105" rpy="0 0 0" />
+	</joint>
+
+	<joint name="base_lidar2_joint"
+		type="fixed">
+		<parent link="base_link" />
+		<child link="lidar2_link" />
+		<origin xyz="-0.3630625 0 0.12" rpy="0 0 ${pi}" />
+	</joint>
+
+	<joint name="base_ebox_link"
+		type="fixed">
+		<parent link="base_link" />
+		<child link="ebox_link" />
+		<origin xyz="0.04 0 0.21" rpy="0 0 0" />
+	</joint>
+
+	<joint name="base_d455_joint"
+		type="fixed">
+		<parent link="base_link" />
+		<child link="d455_link" />
+		<origin xyz="0.1852625 0.1 0.2"
+			rpy="0 0 0" />
+	</joint>
+
+	<joint name="base_nuc_joint"
+		type="fixed">
+		<parent link="base_link" />
+		<child link="nuc_link" />
+		<origin xyz="-0.12 0.0 0.145"
+			rpy="0 0 0" />
+	</joint>
+
+    <joint name="d455_optical_joint" type="fixed">
+        <parent link="d455_link"/>
+        <child link="d455_link_optical"/>
+        <origin xyz="0 0 0" rpy="-1.5708 0 -1.5708"/>
+    </joint>
+
+   <!-- Differential Drive Plugin -->
+<gazebo>
+  <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
+    <update_rate>50</update_rate>
+    <num_wheel_pairs>2</num_wheel_pairs>
+    <left_joint>base_rear_left_wheel_joint</left_joint>
+    <left_joint>base_front_left_wheel_joint</left_joint>
+    <right_joint>base_rear_right_wheel_joint</right_joint>
+    <right_joint>base_front_right_wheel_joint</right_joint>
+    <wheel_separation>0.5</wheel_separation>
+    <wheel_diameter>0.3</wheel_diameter>
+    <max_wheel_torque>20</max_wheel_torque>
+    <max_wheel_acceleration>1.0</max_wheel_acceleration>
+    <publish_odom>true</publish_odom>
+    <publish_odom_tf>true</publish_odom_tf>
+    <publish_wheel_tf>true</publish_wheel_tf>
+    <odometry_frame>odom</odometry_frame>
+    <robot_base_frame>base_link</robot_base_frame>
+    <command_topic>cmd_vel</command_topic>
+    <ros>
+        <remapping>/odom:=/odometry/filtered</remapping>
+    </ros>
+  </plugin>
+  </gazebo>
+
+  <gazebo reference="d455_link">
+  <sensor type="depth" name="d455">
+    <pose>0.1852625 0.1 0.2 0 0 0</pose>
+    <visualize>true</visualize>
+    <update_rate>30</update_rate>
+    <camera>
+      <horizontal_fov>2</horizontal_fov>
+      <image>
+        <width>640</width>
+        <height>480</height>
+        <format>R8G8B8</format>
+      </image>
+      <clip>
+        <near>0.05</near>
+        <far>5.0</far>
+      </clip>
+    </camera>
+    <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+      <ros>
+        <remapping>/d455/image_raw:=/d455/color/image_raw</remapping>
+        <remapping>/d455/points:=/d455/color/points</remapping>
+        <remapping>/d455/camera_info:=/d455/color/camera_info</remapping>
+        <remapping>/d455/depth/image_raw:=/d455/depth/image_rect_raw</remapping>
+        <update_rate>30.0</update_rate>
+      </ros>
+      <frame_name>d455_link_optical</frame_name>
+    </plugin>
+  </sensor>
+  <material>Gazebo/Grey</material>
+  </gazebo>
+
+  <gazebo reference="lidar1_link">
+    <sensor type="ray" name="lidar1">
+      <pose>0.3630625 0 0.105 0 0 1.5708</pose>
+      <visualize>false</visualize>
+      <update_rate>30.0</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>720</samples>
+            <resolution>1</resolution>
+            <min_angle>-1.5708</min_angle>
+            <max_angle>1.5708</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.05</min>
+          <max>12.0</max>
+        </range>
+      </ray>
+      <plugin name="lidar1_controller" filename="libgazebo_ros_ray_sensor.so">
+        <frame_name>lidar1_link</frame_name>
+              <ros>
+        <remapping>~/out:=/scan</remapping>
+      </ros>
+         <output_type>sensor_msgs/LaserScan</output_type>
+      </plugin>
+    </sensor>
+    <material>Gazebo/Black</material>
+    </gazebo>
+
+ <gazebo reference="lidar2_link">
+    <sensor type="ray" name="lidar2">
+      <pose>-0.3630625 0 0.12 0 0 0</pose>
+      <visualize>false</visualize>
+      <update_rate>30.0</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>720</samples>
+            <resolution>1</resolution>
+            <min_angle>-1.5708</min_angle>
+            <max_angle>1.5708</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.05</min>
+          <max>12.0</max>
+        </range>
+      </ray>
+      <plugin name="lidar2_controller" filename="libgazebo_ros_ray_sensor.so">
+        <ros>
+        <remapping>~/out:=/scan2</remapping>
+      </ros>
+         <output_type>sensor_msgs/LaserScan</output_type>
+        <frame_name>lidar2_link</frame_name>
+      </plugin>
+    </sensor>
+    <material>Gazebo/Black</material>
+  </gazebo>
+</robot>
