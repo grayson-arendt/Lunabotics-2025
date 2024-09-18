@@ -19,9 +19,9 @@ install_ros_packages() {
 
 # Install sparkcan package
 install_sparkcan() {
-    sudo add-apt-repository ppa:graysonarendt/sparkcan
-    sudo apt update
-    sudo apt install sparkcan
+    add-apt-repository ppa:graysonarendt/sparkcan
+    apt update
+    apt install sparkcan
 }
 
 # Main script
