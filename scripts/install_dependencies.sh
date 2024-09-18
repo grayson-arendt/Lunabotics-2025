@@ -17,8 +17,8 @@ install_ros_packages() {
     apt install -y "${ros_packages[@]}"
 }
 
-# Install miscellaneous packages
-install_misc_packages() {
+# Install sparkcan package
+install_sparkcan() {
     sudo add-apt-repository ppa:graysonarendt/sparkcan
     sudo apt update
     sudo apt install sparkcan
@@ -26,7 +26,7 @@ install_misc_packages() {
 
 # Main script
 main() {
-    install_misc_package
+    install_sparkcan
     install_ros_packages
 }
 
