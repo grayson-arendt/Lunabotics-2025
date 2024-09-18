@@ -10,9 +10,9 @@ install_ros_packages() {
         "ros-humble-laser-filters"
         "ros-humble-robot-localization"
         "ros-humble-imu-complementary-filter"
-        "ros-humble-gazebo-ros2-control"
         "ros-humble-ros2-control"
         "ros-humble-ros2-controllers"
+        "ros-humble-gazebo-ros2-control"
     )
     apt install -y "${ros_packages[@]}"
 }

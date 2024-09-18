@@ -32,7 +32,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 )
 
 # Control
-add_executable(motor_test src/physical_robot/control/motor_test.cpp)
 add_executable(robot_controller src/physical_robot/control/robot_controller.cpp)
 
 # Scripts
@@ -47,7 +46,6 @@ add_executable(hardware_monitor src/physical_robot/system/hardware_monitor.cpp)
 add_executable(imu_rotator src/physical_robot/system/imu_rotator.cpp)
 add_executable(navigator_client src/physical_robot/system/navigator_client.cpp)
 
-ament_target_dependencies(motor_test rclcpp sensor_msgs)
 ament_target_dependencies(robot_controller rclcpp sensor_msgs geometry_msgs)
 
 ament_target_dependencies(blade_joint_controller rclcpp sensor_msgs std_msgs)
@@ -57,7 +55,6 @@ ament_target_dependencies(hardware_monitor rclcpp sensor_msgs)
 ament_target_dependencies(imu_rotator rclcpp sensor_msgs)
 ament_target_dependencies(navigator_client rclcpp rclcpp_action nav2_msgs geometry_msgs)
 
-target_include_directories(motor_test PRIVATE include)
 target_include_directories(robot_controller PRIVATE include)
 target_include_directories(digging_script PRIVATE include)
 
@@ -65,7 +62,6 @@ rosidl_target_interfaces(robot_controller ${PROJECT_NAME} "rosidl_typesupport_cp
 rosidl_target_interfaces(navigator_client ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 install(TARGETS
-  motor_test
   robot_controller
   digging_script
   blade_joint_controller
@@ -86,10 +82,6 @@ set(PHOENIX_LIBS_DIR /usr/lib/phoenix)
 target_link_libraries(robot_controller ${PHOENIX_LIBS_DIR}/libCTRE_Phoenix.so)
 target_link_libraries(robot_controller ${PHOENIX_LIBS_DIR}/libCTRE_PhoenixCCI.so)
 target_link_libraries(robot_controller ${PHOENIX_LIBS_DIR}/libCTRE_PhoenixTools.so)
-
-target_link_libraries(motor_test ${PHOENIX_LIBS_DIR}/libCTRE_Phoenix.so)
-target_link_libraries(motor_test ${PHOENIX_LIBS_DIR}/libCTRE_PhoenixCCI.so)
-target_link_libraries(motor_test ${PHOENIX_LIBS_DIR}/libCTRE_PhoenixTools.so)
 
 target_link_libraries(digging_script ${PHOENIX_LIBS_DIR}/libCTRE_Phoenix.so)
 target_link_libraries(digging_script ${PHOENIX_LIBS_DIR}/libCTRE_PhoenixCCI.so)
