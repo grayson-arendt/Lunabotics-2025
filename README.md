@@ -31,7 +31,7 @@ This repository contains the software developed by the College of DuPage team fo
 - gazebo_ros2_control
 
 ## Installation
-Note: You will need to have already installed ROS 2 Humble before continuing with installation. The guide can be found [here](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html).
+Note: You will need to have already installed ROS 2 Humble before continuing with installation. The guide can be found [here](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html). Install both `ros-humble-desktop` and `ros-dev-tools`.
 
 #### 1. Setup workspace and clone repository
 
