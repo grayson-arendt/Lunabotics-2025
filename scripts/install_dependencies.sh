@@ -17,8 +17,17 @@ install_ros_packages() {
     apt install -y "${ros_packages[@]}"
 }
 
+# Install miscellaneous packages
+install_misc_packages() {
+    sudo apt install git cmake
+    sudo add-apt-repository ppa:graysonarendt/sparkcan
+    sudo apt update
+    sudo apt install sparkcan
+}
+
 # Main script
 main() {
+    install_misc_package
     install_ros_packages
 }
 
