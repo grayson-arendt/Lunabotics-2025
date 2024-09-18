@@ -22,7 +22,7 @@ def generate_launch_description():
     )
 
     world_path = os.path.join(
-        get_package_share_path("lunabot_description"), "worlds", "moon.world"
+        get_package_share_path("lunabot_description"), "worlds", "artemis_arena.world"
     )
 
     robot_description = ParameterValue(Command(["xacro ", urdf_path]), value_type=str)

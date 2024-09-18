@@ -62,7 +62,7 @@ If the lidars are not under /dev/ttyUSB0 and /dev/ttyUSB1 (which may happen when
 ls /dev/ttyUSB*
 ```
 
-## Running Real Robot
+## Running Physical Robot
 
 Each launch file should be ran in a new terminal window. Every step except for step 3 must be ran on the robot computer through an SSH connection, while step 3 will be ran locally on the host laptop. 
 
@@ -117,7 +117,6 @@ motors for the mechanisms for the zone.
   <img src="sample.png">
 </p>
 
-
 # Running Simulated Robot
 
 The simulation in Gazebo may be slow and laggy depending on the specifications of your computer. You can control the robot with an XBox One controller using the control_mode:=xbox argument. The left joystick will move the drivetrain, while the right joystick y-axis will rotate the bull dozer blade.
@@ -132,6 +131,10 @@ source install/setup.bash
 ```bash
 ros2 launch lunabot_bringup simulation_launch.py control_mode:=keyboard #control_mode:=xbox
 ```
+
+<p align="center">
+  <img src="sample2.png">
+</p>
 
 ## Structure
 
@@ -176,18 +179,25 @@ ros2 launch lunabot_bringup simulation_launch.py control_mode:=keyboard #control
 **lunabot_description**
   - **meshes** (Meshes for robot model in RViz2)
     - base_link.stl
+    - blade_link.stl
     - camera_link.stl
     - ebox_link.stl
     - lidar1_link.stl
     - lidar2_link.stl
     - nuc_link.stl
     - wheel_link.stl
+  - **models** (Models for Gazebo world)
+    - **column**
+    - **lunar_surface**
+    - **rock_rough**
+    - **rock_round**
+    - **textures**
   - **urdf**
     - common_properties.xacro (Defines material colors and physical properties)
     - sim_bot.xacro (URDF for the simulation bot used in Gazebo)
     - test_bot.xacro (URDF for the physical test version of the robot used)
   - **worlds** (Worlds for Gazebo simulation)
-    - moon.world (Gazebo world representing the moon environment for simulation)
+    - artemis_arena.world (Gazebo world representing the Artemis Arena for simulation)
 
 **lunabot_external** (Packages from external sources)
   - rf2o_laser_odometry
