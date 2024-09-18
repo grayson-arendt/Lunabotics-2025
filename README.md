@@ -4,7 +4,7 @@ This repository contains the software developed by the College of DuPage team fo
 
 ## System Components
 
-- Intel NUC 13 Pro
+- ASRock 4X4 BOX-8840U
 - RPLidar S2L
 - RPLidar A3
 - Intel RealSense D456 Depth Camera
