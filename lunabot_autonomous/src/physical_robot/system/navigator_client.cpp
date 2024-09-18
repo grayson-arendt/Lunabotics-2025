@@ -1,4 +1,4 @@
-#include "lunabot_autonomous/msg/control.hpp"
+#include "lunabot_autonomous/msg/control_state.hpp"
 #include "geometry_msgs/msg/pose.hpp"
 #include "nav2_msgs/action/navigate_to_pose.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -27,7 +27,7 @@ class NavigatorClient : public rclcpp::Node
         this->nav_to_pose_client_ = rclcpp_action::create_client<NavigateToPose>(this, "navigate_to_pose");
         this->timer_ =
             this->create_wall_timer(std::chrono::milliseconds(500), std::bind(&NavigatorClient::send_goal, this));
-        publisher_ = this->create_publisher<lunabot_autonomous::msg::Control>("control", 10);
+        control_state_publisher_ = this->create_publisher<lunabot_autonomous::msg::ControlState>("control_state", 10);
     }
 
     /**
@@ -81,60 +81,41 @@ class NavigatorClient : public rclcpp::Node
     }
 
   private:
-    /**
-     * @brief Enables the intake process.
-     */
-    void enable_intake_process()
-    {
-        auto control_msg = lunabot_autonomous::msg::Control();
-        control_msg.enable_intake = true;
-        control_msg.enable_outtake = false;
-        control_msg.enable_autonomous_drive = false;
-        control_msg.enable_manual_drive = false;
 
-        publisher_->publish(control_msg);
+    /**
+     * @brief Enables manual control.
+     */
+    void enable_manual()
+    {
+        auto control_state_msg = lunabot_autonomous::msg::ControlState();
+
+        control_state_msg.is_manual_enabled = true;
+
+        control_state_publisher_->publish(control_state_msg);
     }
 
     /**
-     * @brief Enables the outtake process.
+     * @brief Disables navigation control through /cmd_vel topic.
      */
-    void enable_outtake_process()
+    void disable_navigation()
     {
-        auto control_msg = lunabot_autonomous::msg::Control();
-        control_msg.enable_intake = false;
-        control_msg.enable_outtake = true;
-        control_msg.enable_autonomous_drive = false;
-        control_msg.enable_manual_drive = false;
+        auto control_state_msg = lunabot_autonomous::msg::ControlState();
 
-        publisher_->publish(control_msg);
-    }
+        control_state_msg.is_navigation_enabled = false;
 
-      /**
-     * @brief Disables the all processes.
-     */
-    void disable_process()
-    {
-        auto control_msg = lunabot_autonomous::msg::Control();
-        control_msg.enable_intake = false;
-        control_msg.enable_outtake = false;
-        control_msg.enable_autonomous_drive = false;
-        control_msg.enable_manual_drive = false;
-
-        publisher_->publish(control_msg);
+        control_state_publisher_->publish(control_state_msg);
     }
 
     /**
-     * @brief Enables manual drive control.
+     * @brief Enables navigation control through /cmd_vel topic.
      */
-    void enable_manual_drive()
+    void enable_navigation()
     {
-        auto control_msg = lunabot_autonomous::msg::Control();
-        control_msg.enable_intake = false;
-        control_msg.enable_outtake = false;
-        control_msg.enable_autonomous_drive = false;
-        control_msg.enable_manual_drive = true;
+        auto control_state_msg = lunabot_autonomous::msg::ControlState();
 
-        publisher_->publish(control_msg);
+        control_state_msg.is_navigation_enabled = true;
+
+        control_state_publisher_->publish(control_state_msg);
     }
 
     /**
@@ -161,18 +142,33 @@ class NavigatorClient : public rclcpp::Node
         if (navigate_to_excavation && goal_reached)
         {
             RCLCPP_INFO(this->get_logger(), "\033[1;32mEXCAVATION ZONE REACHED\033[0m");
-            this->enable_intake_process();
-            this->disable_process();
             navigate_to_excavation = false;
             goal_reached = false;
+
+            // Disable setting navigation motor speeds in robot_controller
+            disable_navigation();
+
+            /* Do digging script
+            
+
+
+            */
+            enable_navigation();
             send_goal();
         }
 
         else if (!navigate_to_excavation && goal_reached)
         {
             RCLCPP_INFO(this->get_logger(), "\033[1;32mCONSTRUCTION ZONE REACHED\033[0m");
-            this->enable_outtake_process();
-            this->disable_process();
+
+            // Disable setting navigation motor speeds in robot_controller
+            disable_navigation();
+
+            /* Do depositing script
+            
+
+
+            */
             RCLCPP_INFO(this->get_logger(), "\033[1;32mAUTONOMOUS SUCCESS\033[0m");
         }
 
@@ -184,18 +180,18 @@ class NavigatorClient : public rclcpp::Node
         else if ((!navigate_to_excavation && goal_aborted) || goal_canceled)
         {
             RCLCPP_ERROR(this->get_logger(), "\033[1;31mNAVIGATION TO CONSTRUCTION ZONE FAILED, ENABLING MANUAL CONTROL\033[0m");
-            this->enable_manual_drive();
+            this->enable_manual();
         }
 
         else
         {
             RCLCPP_ERROR(this->get_logger(), "\033[1;31mUKNOWN RESULT CODE, ENABLING MANUAL CONTROL\033[0m");
-            this->enable_manual_drive();
+            this->enable_manual();
         }
     }
 
     rclcpp_action::Client<NavigateToPose>::SharedPtr nav_to_pose_client_;
-    rclcpp::Publisher<lunabot_autonomous::msg::Control>::SharedPtr publisher_;
+    rclcpp::Publisher<lunabot_autonomous::msg::ControlState>::SharedPtr control_state_publisher_;
     rclcpp::TimerBase::SharedPtr timer_;
     bool goal_reached, goal_aborted, goal_canceled;
     bool navigate_to_excavation;

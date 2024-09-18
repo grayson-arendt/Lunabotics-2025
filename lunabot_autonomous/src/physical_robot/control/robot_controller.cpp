@@ -4,21 +4,13 @@
 #include <iomanip>
 #include <limits>
 
-#include "lunabot_autonomous/msg/control.hpp"
+#include "lunabot_autonomous/msg/control_state.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/joy.hpp"
 
-#define Phoenix_No_WPI
-#include "ctre/Phoenix.h"
-#include "ctre/phoenix/cci/Unmanaged_CCI.h"
-#include "ctre/phoenix/platform/Platform.hpp"
-#include "ctre/phoenix/unmanaged/Unmanaged.h"
-
-using namespace ctre::phoenix;
-using namespace ctre::phoenix::platform;
-using namespace ctre::phoenix::motorcontrol;
-using namespace ctre::phoenix::motorcontrol::can;
+#include "SparkFlex.hpp"
+#include "SparkMax.hpp"
 
 /**
  * @class RobotController
@@ -31,14 +23,20 @@ using namespace ctre::phoenix::motorcontrol::can;
 class RobotController : public rclcpp::Node
 {
 public:
-    RobotController() : Node("motor_controller"), manual_enabled_(true), robot_disabled_(false)
+    RobotController() : Node("motor_controller"), manual_enabled_(true), robot_disabled_(false),
+                        left_wheel_motor_("can0", 1),
+                        right_wheel_motor_("can0", 2),
+                        lift_actuator_left_motor_("can0", 3),
+                        lift_actuator_right_motor_("can0", 4),
+                        tilt_actuator_left_motor_("can0", 5),
+                        tilt_actuator_right_motor_("can0", 6)
     {
         // Subscriptions
         velocity_subscriber_ = create_subscription<geometry_msgs::msg::Twist>(
             "cmd_vel", 10, std::bind(&RobotController::velocity_callback, this, std::placeholders::_1));
 
-        control_subscriber_ = create_subscription<lunabot_autonomous::msg::Control>(
-            "control", 10, std::bind(&RobotController::control_callback, this, std::placeholders::_1));
+        control_state_subscriber_ = create_subscription<lunabot_autonomous::msg::ControlState>(
+            "control_state", 10, std::bind(&RobotController::control_state_callback, this, std::placeholders::_1));
 
         joystick_subscriber_ = create_subscription<sensor_msgs::msg::Joy>(
             "joy", 10, std::bind(&RobotController::joy_callback, this, std::placeholders::_1));
@@ -92,15 +90,10 @@ private:
         if (home_button_)
             robot_disabled_ = true;
 
-        // Set speeds for accessories
-        vibrator_speed_ = a_button_ ? 0.8 : 0.0;
-        door_speed_ = left_bumper_ ? -0.5 : right_bumper_ ? 0.5
-                                                          : 0.0;
-        actuator_speed_ = (d_pad_vertical_ == 1.0) ? -0.3 : (d_pad_vertical_ == -1.0) ? 0.3
-                                                                                      : 0.0;
+        // Set dozer lift and tilt actuator speeds
+        lift_actuator_speed_ = (d_pad_vertical_ == 1.0) ? -0.3 : (d_pad_vertical_ == -1.0) ? 0.3 : 0.0;
+        tilt_actuator_speed_ = (right_joystick_y_ > 0.1) ? -0.3 : (right_joystick_y_ < -0.1) ? 0.3 : 0.0;
 
-        // Handle speed reduction when trencher is active
-        trencher_speed_ = x_button_ ? -0.6 : 0.0;
         speed_multiplier_ = (x_button_ && y_button_) ? 0.3 : (x_button_ ? 0.1 : 0.6);
 
         // Handle driving logic based on controller type
@@ -132,13 +125,12 @@ private:
         }
 
         // Set motor output speeds
-        left_wheel_motor_.Set(ControlMode::PercentOutput, left_speed_ * speed_multiplier_);
-        right_wheel_motor_.Set(ControlMode::PercentOutput, right_speed_ * speed_multiplier_);
-        actuator_left_motor_.Set(ControlMode::PercentOutput, actuator_speed_);
-        actuator_right_motor_.Set(ControlMode::PercentOutput, actuator_speed_);
-        trencher_motor_.Set(ControlMode::PercentOutput, trencher_speed_);
-        door_motor_.Set(ControlMode::PercentOutput, door_speed_);
-        vibrator_motor_.Set(ControlMode::PercentOutput, vibrator_speed_);
+        left_wheel_motor_.SetDutyCycle(left_speed_ * speed_multiplier_);
+        right_wheel_motor_.SetDutyCycle(right_speed_ * speed_multiplier_);
+        lift_actuator_left_motor_.SetDutyCycle(lift_actuator_speed_);
+        lift_actuator_right_motor_.SetDutyCycle(lift_actuator_speed_);
+        tilt_actuator_left_motor_.SetDutyCycle(tilt_actuator_speed_);
+        tilt_actuator_right_motor_.SetDutyCycle(tilt_actuator_speed_);
     }
 
     /**
@@ -179,14 +171,19 @@ private:
         {
             left_joystick_x_ = joy_msg->axes[0];
             left_joystick_y_ = joy_msg->axes[1];
+            right_joystick_y_ = joy_msg->axes[4];
             left_trigger_ = joy_msg->axes[2];
             right_trigger_ = joy_msg->axes[5];
 
             // Enable motor control
             if (robot_disabled_)
+            {
                 RCLCPP_ERROR(get_logger(), "\033[0;31mROBOT DISABLED\033[0m");
+            }
             else
-                ctre::phoenix::unmanaged::Unmanaged::FeedEnable(100);
+            {
+                SparkFlex::Heartbeat();
+            }
 
             // Sets motor speeds to drive robot and run accessories
             control_robot();
@@ -198,9 +195,9 @@ private:
      */
     void velocity_callback(const geometry_msgs::msg::Twist::SharedPtr velocity_msg)
     {
-        if (!manual_enabled_)
+        if (!manual_enabled_ && navigation_enabled_)
         {
-            ctre::phoenix::unmanaged::Unmanaged::FeedEnable(1000);
+            SparkFlex::Heartbeat();
             double linear_velocity = velocity_msg->linear.x;
             double angular_velocity = velocity_msg->angular.z;
             double wheel_radius = outdoor_mode_ ? 0.2 : 0.1016;
@@ -209,31 +206,18 @@ private:
             double velocity_left_cmd = 0.1 * (linear_velocity - angular_velocity * wheel_distance / 2.0) / wheel_radius;
             double velocity_right_cmd = 0.1 * (linear_velocity + angular_velocity * wheel_distance / 2.0) / wheel_radius;
 
-            left_wheel_motor_.Set(ControlMode::PercentOutput, velocity_left_cmd);
-            right_wheel_motor_.Set(ControlMode::PercentOutput, velocity_right_cmd);
+            left_wheel_motor_.SetDutyCycle(velocity_left_cmd);
+            right_wheel_motor_.SetDutyCycle(velocity_right_cmd);
         }
     }
 
     /**
-     * @brief Callback for control messages.
+     * @brief Callback for ControlState messages.
      */
-    void control_callback(const lunabot_autonomous::msg::Control::SharedPtr control_msg)
+    void control_state_callback(const lunabot_autonomous::msg::ControlState::SharedPtr control_state_msg)
     {
-        manual_enabled_ = control_msg->enable_manual_drive;
-
-        if (control_msg->enable_intake)
-        {
-            // TODO: Implement intake mechanism control
-        }
-        else if (control_msg->enable_outtake)
-        {
-            // TODO: Implement outtake mechanism control
-        }
-        else
-        {
-            auto clock = rclcpp::Clock();
-            RCLCPP_INFO_THROTTLE(get_logger(), clock, 1000, "\033[0;33mNO MECHANISM ENABLED\033[0m");
-        }
+        manual_enabled_ = control_state_msg->is_manual_enabled;
+        navigation_enabled_ = control_state_msg->is_navigation_enabled;
     }
 
     /**
@@ -259,28 +243,25 @@ private:
     // Subscriptions
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr velocity_subscriber_;
     rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joystick_subscriber_;
-    rclcpp::Subscription<lunabot_autonomous::msg::Control>::SharedPtr control_subscriber_;
-
-    // Control timers
-    rclcpp::TimerBase::SharedPtr intake_timer_, outtake_timer_;
+    rclcpp::Subscription<lunabot_autonomous::msg::ControlState>::SharedPtr control_state_subscriber_;
 
     // Robot states, controller modes, and motor speeds
-    bool manual_enabled_, robot_disabled_;
+    bool manual_enabled_, navigation_enabled_, robot_disabled_;
     bool xbox_mode_, ps4_mode_, switch_mode_, outdoor_mode_;
-    double speed_multiplier_, left_speed_, right_speed_, actuator_speed_, trencher_speed_, door_speed_, vibrator_speed_;
+    double speed_multiplier_, left_speed_, right_speed_, lift_actuator_speed_, tilt_actuator_speed_;
 
     // Controller states and values
     bool home_button_, share_button_, menu_button_, a_button_, b_button_, x_button_, y_button_;
-    double left_trigger_, right_trigger_, left_bumper_, right_bumper_, d_pad_vertical_, d_pad_horizontal_, left_joystick_x_, left_joystick_y_;
+    double left_trigger_, right_trigger_, left_bumper_, right_bumper_, d_pad_vertical_, d_pad_horizontal_, left_joystick_x_, left_joystick_y_, right_joystick_y_;
 
     // Motors
-    TalonFX left_wheel_motor_{1};
-    TalonFX right_wheel_motor_{2};
-    TalonSRX actuator_left_motor_{3};
-    TalonSRX actuator_right_motor_{4};
-    TalonSRX vibrator_motor_{7};
-    TalonFX door_motor_{5};
-    TalonFX trencher_motor_{6};
+    SparkFlex left_wheel_motor_;
+    SparkFlex right_wheel_motor_;
+    SparkMax lift_actuator_left_motor_;
+    SparkMax lift_actuator_right_motor_;
+    SparkMax tilt_actuator_left_motor_;
+    SparkMax tilt_actuator_right_motor_;
+
 };
 
 /**

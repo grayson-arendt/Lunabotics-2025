@@ -17,18 +17,9 @@ install_ros_packages() {
     apt install -y "${ros_packages[@]}"
 }
 
-# Install Phoenix 5 
-install_phoenix() {
-    cd "$(dirname "$0")"
-    mv phoenix /usr/lib/
-    echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/phoenix/' >> ~/.bashrc
-    source ~/.bashrc
-}
-
 # Main script
 main() {
     install_ros_packages
-    install_phoenix
 }
 
 main

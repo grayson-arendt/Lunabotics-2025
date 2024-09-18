@@ -7,9 +7,10 @@ This repository contains the software developed by the College of DuPage team fo
 - Intel NUC 13 Pro
 - RPLidar S2L
 - RPLidar A3
-- Intel RealSense D455 Depth Camera
-- CTRE Falcon 500 (x4)
-- CTRE Talon SRX (x4)
+- Intel RealSense D456 Depth Camera
+- REV Robotics Neo Vortex (x4)
+- REV Robotics Spark Flex (x4)
+- REV Robotics Spark Max (x4)
 - Turnigy 14.8V 8000mAh LiPo Battery
 - Turnigy 14.8V 12000mAh LiPo Battery
 - AndyMark Power Distribution Panel
@@ -58,7 +59,7 @@ colcon build
 
 ## Simulating the Robot
 
-Gazebo simulation can be slow depending on your computer's specifications. You can control the robot with an Xbox One controller by specifying the control mode with `control_mode:=xbox`. In this mode, the left joystick controls the drivetrain, while the right joystick’s y-axis moves the blade.
+Gazebo simulation can be slow depending on your computer's specifications. You can control the robot with an Xbox One controller by specifying the control mode with `control_mode:=xbox`. In this mode, the left joystick controls the drivetrain, while the right joystick’s y-axis moves the dozer blade.
 
 #### 1. Navigate to workspace and source setup
 
@@ -163,15 +164,10 @@ motors for the mechanisms for the zone.
 ## Project Structure
 
 **lunabot_autonomous**
-  - **include**
-    - **ctre** (CTRE Phoenix C++ API for using TalonFX): This directory contains header files and interfaces for the CTRE Phoenix API, which is used to control the Falcon 500 motors and Talon SRX motor controllers.
   - **src**
     - **physical_robot**
-      - **behaviors**
-        - **digging_script.cpp**: This script manages autonomous digging operations, including actions like lowering the trencher, controlling the motor speeds, and monitoring feedback from encoders to adjust the robot's position during digging.
       - **control**
-        - **motor_test.cpp**: A simple program designed to test the operation of the Falcon 500 motors. It can send basic commands to the motors such as setting their speeds to verify that they are functioning correctly.
-        - **robot_controller.cpp**: This node is responsible for generating control commands (like percent output) for the robot’s physical motors. It receives higher-level commands and converts them into motor control signals that are sent via the Phoenix API.
+        - **robot_controller.cpp**: This node is responsible for generating control commands (like percent output) for the robot’s physical motors. It receives higher-level commands and converts them into motor control signals that are sent using the sparkcan package.
       - **system**
         - **hardware_monitor.cpp**: A monitoring system that tracks the status of various sensors and checks their liveliness. If a sensor fails to send data or shows errors, this node will flag the issue and print colored error text in terminal.
         - **imu_rotator.cpp**: Handles IMU (Inertial Measurement Unit) data. It converts the raw IMU readings into a coordinate frame that can be used for localization, rotating them into the ENU (East-North-Up) frame.
@@ -229,4 +225,4 @@ motors for the mechanisms for the zone.
 **scripts**
   - **canable_start.sh**: A script for setting up the CAN interface on the robot. This ensures that the robot’s motor controllers can communicate with the onboard computer via the CAN bus.
   - **install_dependencies.sh**: A script that installs all the necessary dependencies for the robot's software stack, such as ROS 2 packages.
-  - **setup_udev_rules.sh**: A script for configuring udev rules specifically for the Intel RealSense D455 camera, ensuring that the device is automatically recognized and configured when connected to the robot.
+  - **setup_udev_rules.sh**: A script for configuring udev rules specifically for the Intel RealSense D456 camera, ensuring that the device is automatically recognized and configured when connected to the robot.

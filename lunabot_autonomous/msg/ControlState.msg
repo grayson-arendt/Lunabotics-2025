@@ -1,0 +1,2 @@
+bool is_manual_enabled
+bool is_navigation_enabled
