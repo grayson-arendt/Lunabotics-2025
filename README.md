@@ -194,7 +194,7 @@ motors for the mechanisms for the zone.
     - **ekf_params.yaml**: Parameters for the Extended Kalman Filter (EKF) used by the robot localization node. This file defines how sensor data like IMU, GPS, and wheel encoders are fused to provide an accurate estimate of the robot’s position.
     - **nav2_params.yaml**: Configuration parameters for the Navigation2 stack, including settings for path planners, controllers, and costmaps used during autonomous navigation.
     - **s2l_lidar_params.yaml**: Similar to `a3_lidar_params.yaml`, but this file contains parameters specific to the RPLidar S2L.
-    - **sim_params.yaml**: Defines parameters for the Gazebo controllers that simulate the robot’s motors and sensors, ensuring that the simulated environment behaves like the physical robot.
+    - **sim_params.yaml**: Defines parameters for the ros2_control controllers that simulate the robot’s movement in Gazebo.
     - **tag_params.yaml**: Parameters for the apriltag_ros package, which detects AprilTag fiducial markers for robot localization and mapping purposes.
 
 **lunabot_description**
