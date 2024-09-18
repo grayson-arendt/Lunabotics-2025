@@ -16,7 +16,7 @@ def generate_launch_description():
     realsense_launch_path = os.path.join(
         get_package_share_path("realsense2_camera"),
         "launch",
-        "rs_multi_camera_launch.py",
+        "rs_launch.py",
     )
 
     # RPLidar A3
@@ -63,23 +63,14 @@ def generate_launch_description():
     realsense = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(realsense_launch_path),
         launch_arguments={
-            "camera_name1": "d455",
-            "camera_namespace1": "d455",
-            "device_type1": "d455",
-            "enable_gyro1": "true",
-            "enable_accel1": "true",
-            "unite_imu_method1": "2",
-            "json_file_path1": "/home/intel-nuc/high_accuracy.json",
-            "depth_module.profile1": "640x360x90",
-            "rgb_camera.profile1": "640x360x90",
-            "camera_name2": "t265",
-            "camera_namespace2": "t265",
-            "device_type2": "t265",
-            "enable_gyro2": "true",
-            "enable_accel2": "true",
-            "enable_pose2": "true",
-            "unite_imu_method2": "2",
-            "tracking_module.profile2": "848x800x30",
+            "camera_name": "d455",
+            "camera_namespace": "d455",
+            "device_type": "d455",
+            "enable_gyro": "true",
+            "enable_accel": "true",
+            "unite_imu_method": "2",
+            "depth_module.profile": "640x360x90",
+            "rgb_camera.profile": "640x360x90",
         }.items(),
     )
 
@@ -90,23 +81,6 @@ def generate_launch_description():
                 executable='complementary_filter_node',
                 name='complementary_filter_gain_node',
                 output='screen',
-                parameters=[
-                    {'publish_tf': False},
-                    {'fixed_frame': "odom"},
-                    {'do_bias_estimation': True},
-                    {'do_adaptive_gain': True},
-                    {'use_mag': False},
-                    {'gain_acc': 0.01},
-                    {'gain_mag': 0.01},
-                ],        
-    )
-
-    t265_imu_filter = Node(
-                package='imu_complementary_filter',
-                executable='complementary_filter_node',
-                name='complementary_filter_gain_node',
-                output='screen',
-                remappings=[("/imu/data_raw", "/imu_data_raw2"), ("/imu/data", "/imu_data2")],
                 parameters=[
                     {'publish_tf': False},
                     {'fixed_frame': "odom"},
@@ -232,7 +206,6 @@ def generate_launch_description():
             realsense,
             imu_rotator,
             d455_imu_filter,
-            t265_imu_filter,
             ekf,
             robot_controller,
             hardware_monitor,

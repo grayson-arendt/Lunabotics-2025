@@ -1,19 +1,20 @@
-from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, ExecuteProcess
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch_ros.parameter_descriptions import ParameterValue
-from launch.actions import DeclareLaunchArgument
-from launch_ros.actions import Node
-from launch.substitutions import Command, LaunchConfiguration
 import os
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription, RegisterEventHandler
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.event_handlers import OnProcessExit
+from launch_ros.parameter_descriptions import ParameterValue
+from launch_ros.actions import Node
+from launch.conditions import LaunchConfigurationEquals
+from launch.substitutions import Command, LaunchConfiguration
 from ament_index_python.packages import get_package_share_path
 
-
 def generate_launch_description():
+
     rviz_config_path = os.path.join(
-        get_package_share_path("lunabot_description"),
-        "rviz_config",
-        "test_bot_config.rviz",
+        get_package_share_path("lunabot_bringup"),
+        "config",
+        "robot_view.rviz",
     )
 
     urdf_path = os.path.join(
@@ -21,10 +22,12 @@ def generate_launch_description():
     )
 
     world_path = os.path.join(
-        get_package_share_path("lunabot_description"), "worlds", "battlebots.world"
+        get_package_share_path("lunabot_description"), "worlds", "moon.world"
     )
 
-    gazebo = IncludeLaunchDescription(
+    robot_description = ParameterValue(Command(["xacro ", urdf_path]), value_type=str)
+
+    gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
                 get_package_share_path("gazebo_ros"), "launch", "gazebo.launch.py"
@@ -33,8 +36,6 @@ def generate_launch_description():
         launch_arguments={"world": world_path}.items(),
     )
 
-    robot_description = ParameterValue(Command(["xacro ", urdf_path]), value_type=str)
-
     robot_state_publisher_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
@@ -42,17 +43,22 @@ def generate_launch_description():
         parameters=[{"robot_description": robot_description, "use_sim_time": True}],
     )
 
-    spawn_entity = Node(
+    spawn_entity_node = Node(
         package="gazebo_ros",
         executable="spawn_entity.py",
-        arguments=["-topic", "robot_description", "-entity", "sim_bot"],
+        arguments=[
+            "-topic",
+            "robot_description",
+            "-entity",
+            "sim_bot",
+            "-x",
+            "2.6",
+            "-y",
+            "1.5",
+            "-Y",
+            "-2.5",
+        ],
         output="screen",
-    )
-
-    joint_state_publisher_node = Node(
-        package="joint_state_publisher",
-        executable="joint_state_publisher",
-        parameters=[{"use_sim_time": True}],
     )
 
     rviz2_node = Node(
@@ -65,9 +71,10 @@ def generate_launch_description():
         package="joy",
         executable="joy_node",
         name="joy_node",
+        condition=LaunchConfigurationEquals("control_method", "xbox")
     )
 
-    teleop_node = Node(
+    joy_teleop_node = Node(
         package="teleop_twist_joy",
         executable="teleop_node",
         name="teleop_twist_joy_node",
@@ -81,6 +88,16 @@ def generate_launch_description():
                 "scale_angular_turbo.yaw": 1.5,
             }
         ],
+        remappings=[
+            ("/cmd_vel", "/diff_drive_controller/cmd_vel_unstamped")
+        ],
+        condition=LaunchConfigurationEquals("control_method", "xbox")
+    )
+
+    keyboard_teleop_node = ExecuteProcess(
+        cmd=['gnome-terminal', '--', 'bash', '-c', 'ros2 run lunabot_autonomous keyboard_teleop.py;  exec bash'],
+        condition=LaunchConfigurationEquals("control_method", "keyboard"),
+        output='screen'
     )
 
     map_to_odom_tf = Node(
@@ -91,16 +108,46 @@ def generate_launch_description():
         name="static_transform_publisher",
     )
 
+    blade_joint_controller_node = Node(
+        package="lunabot_autonomous", executable="blade_joint_controller"
+    )
+
+    topic_remap_node = Node(
+        package="lunabot_autonomous", executable="topic_remap"
+    )
+
+    joint_state_broadcaster_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
+    )
+        
+    diff_drive_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["diff_drive_controller", "--controller-manager", "/controller_manager"],
+    )
+        
+    position_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["position_controller", "--controller-manager", "/controller_manager"],
+    )
 
     return LaunchDescription(
         [
-            gazebo,
-            robot_state_publisher_node,
-            joint_state_publisher_node,
-            spawn_entity,
+            joint_state_broadcaster_spawner,
+            diff_drive_controller_spawner,
+            position_controller_spawner,
+            gazebo_launch,
             rviz2_node,
+            blade_joint_controller_node,
+            robot_state_publisher_node,
+            spawn_entity_node,
             joy_node,
-            teleop_node,
-            map_to_odom_tf
+            joy_teleop_node,
+            keyboard_teleop_node,
+            topic_remap_node,
+            map_to_odom_tf,
         ]
     )

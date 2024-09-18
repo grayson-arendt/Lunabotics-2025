@@ -23,26 +23,39 @@ find_package(rclcpp_action REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav2_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(ament_cmake_python REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Control.msg"
 )
 
-add_executable(hardware_monitor src/system/hardware_monitor.cpp)
-add_executable(imu_rotator src/system/imu_rotator.cpp)
-add_executable(navigator_client src/system/navigator_client.cpp)
+# Control
+add_executable(motor_test src/physical_robot/control/motor_test.cpp)
+add_executable(robot_controller src/physical_robot/control/robot_controller.cpp)
 
-add_executable(motor_test src/control/motor_test.cpp)
-add_executable(robot_controller src/control/robot_controller.cpp)
+# Scripts
+add_executable(digging_script src/physical_robot/behaviors/digging_script.cpp)
 
-add_executable(digging_script src/scripts/digging_script.cpp)
+# Simulation
+add_executable(blade_joint_controller src/simulated_robot/blade_joint_controller.cpp)
+add_executable(topic_remap src/simulated_robot/topic_remap.cpp)
+
+# System
+add_executable(hardware_monitor src/physical_robot/system/hardware_monitor.cpp)
+add_executable(imu_rotator src/physical_robot/system/imu_rotator.cpp)
+add_executable(navigator_client src/physical_robot/system/navigator_client.cpp)
+
+ament_target_dependencies(motor_test rclcpp sensor_msgs)
+ament_target_dependencies(robot_controller rclcpp sensor_msgs geometry_msgs)
+
+ament_target_dependencies(blade_joint_controller rclcpp sensor_msgs std_msgs)
+ament_target_dependencies(topic_remap rclcpp geometry_msgs nav_msgs)
 
 ament_target_dependencies(hardware_monitor rclcpp sensor_msgs)
 ament_target_dependencies(imu_rotator rclcpp sensor_msgs)
-ament_target_dependencies(motor_test rclcpp sensor_msgs)
 ament_target_dependencies(navigator_client rclcpp rclcpp_action nav2_msgs geometry_msgs)
-ament_target_dependencies(robot_controller rclcpp sensor_msgs geometry_msgs)
 
 target_include_directories(motor_test PRIVATE include)
 target_include_directories(robot_controller PRIVATE include)
@@ -52,13 +65,20 @@ rosidl_target_interfaces(robot_controller ${PROJECT_NAME} "rosidl_typesupport_cp
 rosidl_target_interfaces(navigator_client ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 install(TARGETS
-  hardware_monitor
-  imu_rotator
   motor_test
-  navigator_client
   robot_controller
   digging_script
+  blade_joint_controller
+  topic_remap
+  hardware_monitor
+  imu_rotator
+  navigator_client
   DESTINATION lib/${PROJECT_NAME}
+)
+
+install(PROGRAMS
+   src/simulated_robot/teleop/keyboard_teleop.py
+   DESTINATION lib/${PROJECT_NAME}
 )
 
 set(PHOENIX_LIBS_DIR /usr/lib/phoenix)

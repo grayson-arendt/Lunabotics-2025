@@ -9,8 +9,7 @@
 			<geometry>
 				<mesh filename="file:///$(find lunabot_description)/meshes/base_link.stl" />
 			</geometry>
-			<origin xyz="0 0 0.085"
-				rpy="0 0 0" />
+			<origin xyz="0 0 0.085" rpy="0 0 0" />
 			<material name="light_grey" />
 		</visual>
 	</link>
@@ -20,8 +19,7 @@
 			<geometry>
 				<mesh filename="file:///$(find lunabot_description)/meshes/ebox_link.stl" />
 			</geometry>
-			<origin xyz="0 0 0"
-				rpy="0 0 0" />
+			<origin xyz="0 0 0" rpy="0 0 0" />
 			<material name="white" />
 		</visual>
 	</link>
@@ -31,8 +29,7 @@
 			<geometry>
 				<mesh filename="file:///$(find lunabot_description)/meshes/wheel_link.stl" />
 			</geometry>
-			<origin xyz="0 0 0"
-				rpy="${pi / 2.0} 0 0" />
+			<origin xyz="0 0 0" rpy="${pi / 2.0} 0 0" />
 			<material name="green" />
 		</visual>
 	</link>
@@ -42,8 +39,7 @@
 			<geometry>
 				<mesh filename="file:///$(find lunabot_description)/meshes/wheel_link.stl" />
 			</geometry>
-			<origin xyz="0 0 0"
-				rpy="${-pi / 2.0} 0 0" />
+			<origin xyz="0 0 0" rpy="${-pi / 2.0} 0 0" />
 			<material name="green" />
 		</visual>
 	</link>
@@ -53,8 +49,7 @@
 			<geometry>
 				<mesh filename="file:///$(find lunabot_description)/meshes/wheel_link.stl" />
 			</geometry>
-			<origin xyz="0 0 0"
-				rpy="${pi / 2.0} 0 0" />
+			<origin xyz="0 0 0" rpy="${pi / 2.0} 0 0" />
 			<material name="green" />
 		</visual>
 	</link>
@@ -64,8 +59,7 @@
 			<geometry>
 				<mesh filename="file:///$(find lunabot_description)/meshes/wheel_link.stl" />
 			</geometry>
-			<origin xyz="0 0 0"
-				rpy="${-pi / 2.0} 0 0" />
+			<origin xyz="0 0 0" rpy="${-pi / 2.0} 0 0" />
 			<material name="green" />
 		</visual>
 	</link>
@@ -75,8 +69,7 @@
 			<geometry>
 				<mesh filename="file:///$(find lunabot_description)/meshes/lidar1_link.stl" />
 			</geometry>
-			<origin xyz="0 0 0"
-				rpy="0 0 ${pi / 2.0}" />
+			<origin xyz="0 0 0" rpy="0 0 ${pi / 2.0}" />
 			<material name="black" />
 		</visual>
 	</link>
@@ -86,8 +79,7 @@
 			<geometry>
 				<mesh filename="file:///$(find lunabot_description)/meshes/lidar2_link.stl" />
 			</geometry>
-			<origin xyz="0 0 0"
-				rpy="0 ${pi} 0" />
+			<origin xyz="0 0 0" rpy="0 ${pi} 0" />
 			<material name="black" />
 		</visual>
 	</link>
@@ -97,8 +89,7 @@
 			<geometry>
 				<mesh filename="file:///$(find lunabot_description)/meshes/camera_link.stl" />
 			</geometry>
-			<origin xyz="0 0.305 0"
-				rpy="0 0 0" />
+			<origin xyz="0 0.305 0" rpy="0 0 0" />
 			<material name="camera_grey" />
 		</visual>
 	</link>
@@ -108,81 +99,65 @@
 			<geometry>
 				<mesh filename="file:///$(find lunabot_description)/meshes/nuc_link.stl" />
 			</geometry>
-			<origin xyz="0 0 0"
-				rpy="${pi} 0 ${pi}" />
+			<origin xyz="0 0 0" rpy="${pi} 0 ${pi}" />
 			<material name="black" />
 		</visual>
 	</link>
 
-	<joint name="base_rear_right_wheel_joint"
-		type="fixed">
+	<joint name="base_rear_right_wheel_joint" type="fixed">
 		<parent link="base_link" />
 		<child link="rear_right_wheel_link" />
-		<origin xyz="-0.19 -0.25 0.085"
-			rpy="0 0 0" />
+		<origin xyz="-0.19 -0.25 0.085" rpy="0 0 0" />
 		<axis xyz="0 1 0" />
 	</joint>
 
-	<joint name="base_rear_left_wheel_joint"
-		type="fixed">
+	<joint name="base_rear_left_wheel_joint" type="fixed">
 		<parent link="base_link" />
 		<child link="rear_left_wheel_link" />
-		<origin xyz="-0.19 0.25 0.085"
-			rpy="0 0 0" />
+		<origin xyz="-0.19 0.25 0.085" rpy="0 0 0" />
 		<axis xyz="0 1 0" />
 	</joint>
 
-	<joint name="base_front_right_wheel_joint"
-		type="fixed">
+	<joint name="base_front_right_wheel_joint" type="fixed">
 		<parent link="base_link" />
 		<child link="front_right_wheel_link" />
-		<origin xyz="0.28 -0.25 0.085"
-			rpy="0 0 0" />
+		<origin xyz="0.28 -0.25 0.085" rpy="0 0 0" />
 	</joint>
 
-	<joint name="base_front_left_wheel_joint"
-		type="fixed">
+	<joint name="base_front_left_wheel_joint" type="fixed">
 		<parent link="base_link" />
 		<child link="front_left_wheel_link" />
-		<origin xyz="0.28 0.25 0.085"
-			rpy="0 0 0" />
+		<origin xyz="0.28 0.25 0.085" rpy="0 0 0" />
 	</joint>
 
-	<joint name="base_lidar1_joint"
-		type="fixed">
+	<joint name="base_lidar1_joint" type="fixed">
 		<parent link="base_link" />
 		<child link="lidar1_link" />
 		<origin xyz="0 0 0.71" rpy="0 0 ${pi}" />
 	</joint>
 
-	<joint name="base_lidar2_joint"
-		type="fixed">
+	<joint name="base_lidar2_joint" type="fixed">
 		<parent link="base_link" />
 		<child link="lidar2_link" />
 		<origin xyz="0.305 0 0.12" rpy="0 ${pi} 0" />
 	</joint>
 
-	<joint name="base_ebox_link"
-		type="fixed">
+	<joint name="base_ebox_link" type="fixed">
 		<parent link="base_link" />
 		<child link="ebox_link" />
 		<origin xyz="0.04 0 0.21" rpy="0 0 0" />
 	</joint>
 
-	<joint name="base_d455_joint"
-		type="fixed">
+	<joint name="base_d455_joint" type="fixed">
 		<parent link="base_link" />
 		<child link="d455_link" />
-		<origin xyz="0.305 0.1 0.2"
-			rpy="0 0 0" />
+		<origin xyz="0.305 0.1 0.2" rpy="0 0 0" />
 	</joint>
 
-	<joint name="base_nuc_joint"
-		type="fixed">
+	<joint name="base_nuc_joint" type="fixed">
 		<parent link="base_link" />
 		<child link="nuc_link" />
-		<origin xyz="-0.12 0.0 0.145"
-			rpy="0 0 0" />
+		<origin xyz="-0.12 0.0 0.145" rpy="0 0 0" />
 	</joint>
 
 

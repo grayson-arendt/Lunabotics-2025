@@ -869,7 +869,7 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "rtabmap_args",
-                default_value="-d -RGBD/OptimizeFromGraphEnd true -RGBD/NewMapOdomChangeDistance 0.1 -RGBD/OptimizeMaxError 10 -RGBD/StartAtOrigin true -RGBD/AngularUpdate 0.2 -RGBD/ProximityAngle 60 -RGBD/ProximityOdomGuess true -Vis/MaxFeatures 2000 -Rtabmap/StartNewMapOnGoodSignature true -Rtabmap/DetectionRate 2 -RGBD/CreateOccupancyGrid true -Grid/CellSize 0.035 -Grid/MaxGroundAngle 60 -Grid/DepthRoiRatios 0.0 0.0 0.0 0.1 -Grid/Sensor 2 -Grid/RangeMin 0.5 -Grid/RangeMax 0.0 Reg/Force3DoF true -Reg/Strategy 2 -Grid/MaxObstacleHeight 0.4 -Grid/RayTracing true",
+                default_value="-d -RGBD/LoopClosure true -RGBD/LoopClosureMaxDistance 2.0 -Rtabmap/StartNewMapOnGoodSignature false -RGBD/OdomCorrection true  -RGBD/ProximityOdomGuess true -RGBD/NewMapOdomChangeDistance 0.5 -RGBD/OptimizeMaxError 0.1 -RGBD/NeighborLinkRefining true -RGBD/ProximityBySpace true -RGBD/StartAtOrigin true -RGBD/LinearUpdate 0.01 -RGBD/AngularUpdate 0.01 -RGBD/LinearSpeedUpdate 0.2 -RGBD/AngularSpeedUpdate 0.1 -RGBD/ProximityAngle 60 -RGBD/ProximityDistance 0.5 -Vis/MinInliers 10 -Vis/InlierDistance 0.1 -Vis/MaxFeatures 3000 -Rtabmap/StartNewMapOnGoodSignature true -Rtabmap/DetectionRate 20 -RGBD/CreateOccupancyGrid true -Grid/CellSize 0.035 -Grid/MaxGroundAngle 60 -Grid/Sensor 2 -Grid/RangeMin 0.5 -Grid/RangeMax 0.0 -Reg/Force3DoF true -Reg/Strategy 2 -Grid/MaxObstacleHeight 0.4 -Grid/RayTracing true",
                 description='Backward compatibility, use "args" instead.',
             ),
             DeclareLaunchArgument(

@@ -1,189 +1,555 @@
-<sdf version='1.6'>
-  <world name='moon'>
-    <scene>
-      <background>0 0 0 255</background>
-      <ambient>0.4 0.4 0.4 1</ambient>
-      <shadows>1</shadows>
-      <grid>0</grid>
-      <origin_visual>0</origin_visual>
-      <sky>
-        <time>24</time>
-        <clouds>
-          <humidity>0.0001</humidity>
-          <mean_size>0.0001</mean_size>
-          <ambient>0 0 0 1</ambient>
-        </clouds>
-      </sky>
-    </scene>
+<sdf version='1.7'>
+  <world name='default'>
+    <light name='sun' type='directional'>
+      <cast_shadows>1</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.4 0.4 0.4 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <attenuation>
+        <range>500</range>
+        <constant>0.8</constant>
+        <linear>0.02</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
 
-    <!-- A global light source -->
-    <include>
-      <uri>model://sun</uri>
-    </include>
-
-    <!-- DEM of moon surface -->
-    <include>
-      <uri>model://dem_moon</uri>
-      <friction>
-        <mu> 0.01 </mu>
-        <mu2> 0.01 </mu2>
-      </friction>
-    </include> 
-    
-    <include>
-      <name>rock_small_0</name>
-      <uri>model://rock_small</uri>
-      <pose>-20 -13 0.1 0 0 0 1</pose>
-    </include>
-
-    <include>
-      <name>rock_small_1</name>
-      <uri>model://rock_small</uri>
-      <pose>-18 -5 0.1 0 0 0 1</pose>
-    </include>
-    
-    <include>
-      <name>rock_small_2</name>
-      <uri>model://rock_small</uri>
-      <pose>-19 2 0.1 0 0 0 1</pose>
-    </include>
-
-    <include>
-      <name>rock_large_alt_0</name>
-      <uri>model://rock_large_alt</uri>
-      <pose>-25.5 -6 0 0 0 0 1</pose>
-    </include>
-    
-    <include>
-      <name>rock_large_alt_1</name>
-      <uri>model://rock_large_alt</uri>
-      <pose>-42 -15 -0.1 0 0 0 1</pose>
-    </include>
-
-    <include>
-      <name>rock_large_alt_2</name>
-      <uri>model://rock_large_alt</uri>
-      <pose>-60.0708 -18.8017 0 0 -0 0</pose>
-    </include>
-
-    <include>
-      <name>rock_large_alt_3</name>
-      <uri>model://rock_large_alt</uri>
-      <pose>-73.7845 -33.3042 -0.1 0 0 0</pose>
-    </include>
-
-    <include>
-      <name>rock_large_alt_4</name>
-      <uri>model://rock_large_alt</uri>
-      <pose>-64.0217 -5.00256 0 0 0 -2.0233</pose>
-    </include>
-
-    <include>
-      <name>rock_large_alt_5</name>
-      <uri>model://rock_large_alt</uri>
-      <pose>-30.6179 7.59373 -0.1 0 0 0</pose>
-    </include>
-
-    <include>
-      <name>rock_large_alt_6</name>
-      <uri>model://rock_large_alt</uri>
-      <pose>-66.8079 -41.3161 -0.1 0 0 -1.32203</pose>
-    </include>
-    
-    <include>
-      <name>rock_large_0</name>
-      <uri>model://rock_large</uri>
-      <pose>28 -2 -0.1 0 0 0 1</pose>
-    </include>
-    
-    <include>
-      <name>rock_large_1</name>
-      <uri>model://rock_large</uri>
-      <pose>-13.5 -16.7 -0.1 0 0 0 1</pose>
-    </include>
-
-    <include>
-      <name>rock_large_2</name>
-      <uri>model://rock_large</uri>
-      <pose>-44.3403 0.30004 -0.1 0 -0 0</pose>
-    </include>
-
-    <include>
-      <name>rock_large_3</name>
-      <uri>model://rock_large</uri>
-      <pose>-78.2724 3.00211 -0.1 0 -0 0.74589</pose>
-    </include>
-
-    <include>
-      <name>rock_large_4</name>
-      <uri>model://rock_large</uri>
-      <pose>-79.7882 -11.3205 -0.1 0 -0 0.74589</pose>
-    </include>
-
-    <include>
-      <name>lunar_lander_0</name>
-      <uri>model://lunar_lander</uri>
-      <pose>11 -12 0 0 0 0 1</pose>
-    </include>
-
-    <include>
-      <name>isru_processing_plant_0</name>
-      <uri>model://isru_processing_plant</uri>
-      <pose>-29 -29 -0.8 0 0 0 1</pose>
-    </include>
-
-    <include>
-      <name>solar_panels_0</name>
-      <uri>model://solar_panels</uri>
-      <pose>-52 -30 -0.01 0 0 0 1</pose>
-    </include>
-
-    <include>
-      <name>solar_panels_1</name>
-      <uri>model://solar_panels</uri>
-      <pose>-52 -34 -0.01 0 0 0 1</pose>
-    </include>
-
-    <include>
-      <name>solar_panels_2</name>
-      <uri>model://solar_panels</uri>
-      <pose>-52 -38 -0.01 0 0 0 1</pose>
-    </include>
-
-    <include>
-      <name>moon_habitat_0</name>
-      <uri>model://moon_habitat</uri>
-      <pose>53 -90 -1 0 0 0 1</pose>
-    </include>
-
-    <include>
-      <name>radio_tower_0</name>
-      <uri>model://radio_tower</uri>
-      <pose>-4 -95 -1 0 0 0 1</pose>
-    </include>
-    
-    <physics name='default_physics' default='0' type='ode'>
-      <max_step_size>0.01</max_step_size>
+    <gravity>0 0 -9.81</gravity>
+    <physics type='ode'>
+      <max_step_size>0.001</max_step_size>
       <real_time_factor>1</real_time_factor>
-      <real_time_update_rate>100</real_time_update_rate>
+      <real_time_update_rate>1000</real_time_update_rate>
     </physics>
 
-    <gravity>0 0 -1.622</gravity>
-    <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
-    <atmosphere type='adiabatic'/>
-    <spherical_coordinates>
-      <surface_model>EARTH_WGS84</surface_model>
-      <latitude_deg>0</latitude_deg>
-      <longitude_deg>0</longitude_deg>
-      <elevation>0</elevation>
-      <heading_deg>0</heading_deg>
-    </spherical_coordinates>
+    <scene>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <background>0 0 0 255</background>
+      <shadows>1</shadows>
+    </scene>
+
+    <model name='lunar_surface'>
+      <static>1</static>
+      <link name='link'>
+        <collision name='lunar_surface_collision'>
+          <geometry>
+            <mesh>
+              <uri>model://lunar_surface/lunar_surface.stl</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>0.8</mu>
+                <mu2>0.8</mu2>
+              </ode>
+            </friction>
+          </surface>
+          <pose>0 0 -0.4 0 0 0</pose>
+        </collision>
+        <visual name='lunar_surface'>
+          <geometry>
+            <mesh>
+              <uri>model://lunar_surface/lunar_surface.stl</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+          <pose>0 0 -0.4 0 0 0</pose>
+          <material>
+            <script>
+              <uri>model://textures/</uri>
+              <name>regolith.jpg</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name='arena_wall_long'>
+      <static>1</static>
+      <link name='link'>
+        <collision name='arena_wall_long_collision'>
+          <geometry>
+            <box>
+              <size>7.08 0.1 1.0</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>0.3</mu>
+                <mu2>0.3</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='arena_wall_long'>
+          <geometry>
+            <box>
+              <size>7.08 0.1 1.0</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://textures/</uri>
+              <name>concrete.jpg</name>
+            </script>
+          </material>
+        </visual>
+        <pose>0 -2.55 -0.3 0 0 0</pose>
+      </link>
+    </model>
+
+    <model name='arena_wall_long_2'>
+      <static>1</static>
+      <link name='link'>
+        <collision name='arena_wall_long_2_collision'>
+          <geometry>
+            <box>
+              <size>7.08 0.1 1.0</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>0.3</mu>
+                <mu2>0.3</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='arena_wall_long_2'>
+          <geometry>
+            <box>
+              <size>7.08 0.1 1.0</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://textures/</uri>
+              <name>concrete.jpg</name>
+            </script>
+          </material>
+        </visual>
+        <pose>0 2.55 -0.3 0 0 0</pose>
+      </link>
+    </model>
+
+    <model name='arena_wall_short'>
+      <static>1</static>
+      <link name='link'>
+        <collision name='arena_wall_short_collision'>
+          <geometry>
+            <box>
+              <size>0.1 5 1.0</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>0.3</mu>
+                <mu2>0.3</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='arena_wall_short'>
+          <geometry>
+            <box>
+              <size>0.1 5 1.0</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://textures/</uri>
+              <name>concrete.jpg</name>
+            </script>
+          </material>
+        </visual>
+        <pose>3.49 0 -0.3 0 0 0</pose>
+      </link>
+    </model>
+
+    <model name='arena_wall_short_2'>
+      <static>1</static>
+      <link name='link'>
+        <collision name='arena_wall_short_2_collision'>
+          <geometry>
+            <box>
+              <size>0.1 5 1.0</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>0.3</mu>
+                <mu2>0.3</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='arena_wall_short_2'>
+          <geometry>
+            <box>
+              <size>0.1 5 1.0</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://textures/</uri>
+              <name>concrete.jpg</name>
+            </script>
+          </material>
+        </visual>
+        <pose>-3.49 0 -0.3 0 0 0</pose>
+      </link>
+    </model>
+
+    <model name='arena_glass_short'>
+      <static>1</static>
+      <link name='link'>
+        <collision name='arena_glass_short_collision'>
+          <geometry>
+            <box>
+              <size>0.1 5 2.0</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>0.3</mu>
+                <mu2>0.3</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='arena_glass_short'>
+          <geometry>
+            <box>
+              <size>0.1 5 2.0</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/GreyTransparent</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <pose>3.49 0 1.2 0 0 0</pose>
+      </link>
+    </model>
+
+    <model name='arena_glass_short_2'>
+      <link name='link'>
+        <static>1</static>
+        <collision name='arena_glass_short_2_collision'>
+          <geometry>
+            <box>
+              <size>0.1 5 2.0</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>0.3</mu>
+                <mu2>0.3</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='arena_glass_short_2'>
+          <geometry>
+            <box>
+              <size>0.1 5 2.0</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/GreyTransparent</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <pose>-3.49 0 1.2 0 0 0</pose>
+      </link>
+    </model>
+
+    <model name='arena_glass_long'>
+      <static>1</static>
+      <link name='link'>
+        <collision name='arena_glass_long_collision'>
+          <geometry>
+            <box>
+              <size>7.08 0.1 2</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>0.3</mu>
+                <mu2>0.3</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='arena_glass_long'>
+          <geometry>
+            <box>
+              <size>7.08 0.1 2</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/GreyTransparent</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <pose>0 2.55 1.2 0 0 0</pose>
+      </link>
+    </model>
+
+    <model name='arena_glass_long_2'>
+      <static>1</static>
+      <link name='link'>
+        <collision name='arena_wall_short_2_collision'>
+          <geometry>
+            <box>
+              <size>7.08 0.1 2</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>0.3</mu>
+                <mu2>0.3</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='arena_wall_short_2'>
+          <geometry>
+            <box>
+              <size>7.08 0.1 2</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/GreyTransparent</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <pose>0 -2.55 1.2 0 0 0</pose>
+      </link>
+    </model>
+
+    <model name='column'>
+      <static>1</static>
+      <link name='link'>
+        <collision name='column_collision'>
+          <geometry>
+            <mesh>
+              <uri>model://column/column.stl</uri>
+              <scale>2.5 2.5 2.5</scale>
+            </mesh>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>0.3</mu>
+                <mu2>0.3</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='column'>
+          <geometry>
+            <mesh>
+              <uri>model://column/column.stl</uri>
+              <scale>2.5 2.5 2.5</scale>
+            </mesh>
+          </geometry>
+        </visual>
+        <pose>0 0 -0.42 0 0 0</pose>
+      </link>
+    </model>
+
+    <model name='rock_round'>
+      <link name='link'>
+        <static>1</static>
+        <pose>1.32307 0.270163 -0.35 0 0 0.846674</pose>
+        <visual name='rock_round'>
+          <geometry>
+            <mesh>
+              <uri>model://rock_round/rock_round.stl</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://textures/</uri>
+              <name>regolith.jpg</name>
+            </script>
+          </material>
+        </visual>
+        <collision name='rock_round_collision'>
+          <geometry>
+            <mesh>
+              <uri>model://rock_round/rock_round.stl</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <model name='rock_round_2'>
+      <link name='link'>
+        <pose>0.56 -0.39 -0.35 0 0 -0.80</pose>
+        <visual name='rock_round_2'>
+          <geometry>
+            <mesh>
+              <uri>model://rock_round/rock_round.stl</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://textures/</uri>
+              <name>regolith.jpg</name>
+            </script>
+          </material>
+        </visual>
+        <collision name='rock_round_2_collision'>
+          <geometry>
+            <mesh>
+              <uri>model://rock_round/rock_round.stl</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <model name='rock_round_3'>
+      <link name='link'>
+        <static>1</static>
+        <pose>1.25 -1.0 -0.35 0 0 2.55</pose>
+        <visual name='rock_round_3'>
+          <geometry>
+            <mesh>
+              <uri>model://rock_round/rock_round.stl</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://textures/</uri>
+              <name>regolith.jpg</name>
+            </script>
+          </material>
+        </visual>
+        <collision name='rock_round_3_collision'>
+          <geometry>
+            <mesh>
+              <uri>model://rock_round/rock_round.stl</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+        </collision>
+        <velocity_decay>
+          <linear>0.39</linear>
+          <angular>0.9</angular>
+        </velocity_decay>
+      </link>
+    </model>
+
+    <model name='rock_rough'>
+      <link name='link'>
+        <self_collide>1</self_collide>
+        <static>0</static>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>3.0</ixx>
+            <iyy>3.0</iyy>
+            <izz>3.0</izz>
+          </inertia>
+        </inertial>
+        <pose>-2.01943 -0.546468 -0.35 0 0 -2.17367</pose>
+        <visual name='rock_rough'>
+          <geometry>
+            <mesh>
+              <uri>model://rock_rough/rock_rough.stl</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://textures/</uri>
+              <name>regolith.jpg</name>
+            </script>
+          </material>
+        </visual>
+        <collision name='rock_rough_collision'>
+          <geometry>
+            <mesh>
+              <uri>model://rock_rough/rock_rough.stl</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.5</mu>
+                <mu2>1.5</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <velocity_decay>
+          <linear>0.3</linear>
+          <angular>0.3</angular>
+        </velocity_decay>
+      </link>
+    </model>
+
+    <model name='rock_rough_2'>
+      <link name='link'>
+        <self_collide>1</self_collide>
+        <static>1</static>
+        <pose>0.93 -1.84 -0.35 0 0 -0.62</pose>
+        <visual name='rock_rough_2'>
+          <geometry>
+            <mesh>
+              <uri>model://rock_rough/rock_rough.stl</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://textures/</uri>
+              <name>regolith.jpg</name>
+            </script>
+          </material>
+        </visual>
+        <collision name='rock_rough_2_collision'>
+          <geometry>
+            <mesh>
+              <uri>model://rock_rough/rock_rough.stl</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+        </collision>
+      </link>
+    </model>
 
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose frame=''>-44.307289 49.989849 6.400211 0 0.029796 -1.035819</pose>
+        <pose>0.550397 7.43232 16.7573 0 1.3538 -1.4587</pose>
         <view_controller>orbit</view_controller>
-        <projection_type>perspective</projection_type>
       </camera>
     </gui>
   </world>
