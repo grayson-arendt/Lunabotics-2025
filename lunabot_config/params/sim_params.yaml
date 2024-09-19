@@ -31,6 +31,6 @@ diff_drive_controller:
     base_frame_id: base_link
     open_loop: false
     velocity_rolling_window_size: 2
-    enable_odom_tf: false
+    enable_odom_tf: true
     use_stamped_vel: false
     position_feedback: true
