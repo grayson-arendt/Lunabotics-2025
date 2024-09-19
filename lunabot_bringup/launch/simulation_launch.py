@@ -1,16 +1,20 @@
 import os
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription, RegisterEventHandler
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.event_handlers import OnProcessExit
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.actions import Node
 from launch.conditions import LaunchConfigurationEquals
-from launch.substitutions import Command, LaunchConfiguration
+from launch.substitutions import Command
 from ament_index_python.packages import get_package_share_path
+from launch.actions import (
+    DeclareLaunchArgument,
+    ExecuteProcess,
+    IncludeLaunchDescription,
+    RegisterEventHandler,
+)
+
 
 def generate_launch_description():
-
     rviz_config_path = os.path.join(
         get_package_share_path("lunabot_bringup"),
         "config",
@@ -71,7 +75,7 @@ def generate_launch_description():
         package="joy",
         executable="joy_node",
         name="joy_node",
-        condition=LaunchConfigurationEquals("control_method", "xbox")
+        condition=LaunchConfigurationEquals("control_method", "xbox"),
     )
 
     joy_teleop_node = Node(
@@ -88,16 +92,20 @@ def generate_launch_description():
                 "scale_angular_turbo.yaw": 1.5,
             }
         ],
-        remappings=[
-            ("/cmd_vel", "/diff_drive_controller/cmd_vel_unstamped")
-        ],
-        condition=LaunchConfigurationEquals("control_method", "xbox")
+        remappings=[("/cmd_vel", "/diff_drive_controller/cmd_vel_unstamped")],
+        condition=LaunchConfigurationEquals("control_method", "xbox"),
     )
 
     keyboard_teleop_node = ExecuteProcess(
-        cmd=['gnome-terminal', '--', 'bash', '-c', 'ros2 run lunabot_autonomous keyboard_teleop.py;  exec bash'],
+        cmd=[
+            "gnome-terminal",
+            "--",
+            "bash",
+            "-c",
+            "ros2 run lunabot_autonomous keyboard_teleop.py;  exec bash",
+        ],
         condition=LaunchConfigurationEquals("control_method", "keyboard"),
-        output='screen'
+        output="screen",
     )
 
     map_to_odom_tf = Node(
@@ -112,26 +120,36 @@ def generate_launch_description():
         package="lunabot_autonomous", executable="blade_joint_controller"
     )
 
-    topic_remap_node = Node(
-        package="lunabot_autonomous", executable="topic_remap"
-    )
+    topic_remap_node = Node(package="lunabot_autonomous", executable="topic_remap")
 
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
+        arguments=[
+            "joint_state_broadcaster",
+            "--controller-manager",
+            "/controller_manager",
+        ],
     )
-        
+
     diff_drive_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["diff_drive_controller", "--controller-manager", "/controller_manager"],
+        arguments=[
+            "diff_drive_controller",
+            "--controller-manager",
+            "/controller_manager",
+        ],
     )
-        
+
     position_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["position_controller", "--controller-manager", "/controller_manager"],
+        arguments=[
+            "position_controller",
+            "--controller-manager",
+            "/controller_manager",
+        ],
     )
 
     return LaunchDescription(

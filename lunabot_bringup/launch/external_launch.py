@@ -1,9 +1,5 @@
 import os
 import xacro
-from ament_index_python.packages import (
-    get_package_share_path,
-    get_package_share_directory,
-)
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, EmitEvent, RegisterEventHandler
 from launch.conditions import IfCondition, UnlessCondition
@@ -12,10 +8,13 @@ from launch.events import Shutdown
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from nav2_common.launch import ReplaceString
+from ament_index_python.packages import (
+    get_package_share_path,
+    get_package_share_directory,
+)
 
 
 def generate_launch_description():
-
     bringup_dir = get_package_share_directory("lunabot_bringup")
 
     urdf_path = os.path.join(

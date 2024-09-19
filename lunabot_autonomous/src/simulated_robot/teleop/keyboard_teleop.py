@@ -28,28 +28,29 @@ CTRL-C to quit
 """
 
 moveBindings = {
-    'w': (1, 0, 0, 0),
-    's': (-1, 0, 0, 0),
-    'a': (0, 0, 0, 1),
-    'd': (0, 0, 0, -1),
+    "w": (1, 0, 0, 0),
+    "s": (-1, 0, 0, 0),
+    "a": (0, 0, 0, 1),
+    "d": (0, 0, 0, -1),
 }
 
 speedBindings = {
-    'q': (1.1, 1.0),
-    'e': (1.0, 1.1),
-    'z': (0.9, 1.0),
-    'c': (1.0, 0.9),
+    "q": (1.1, 1.0),
+    "e": (1.0, 1.1),
+    "z": (0.9, 1.0),
+    "c": (1.0, 0.9),
 }
 
 bladeBindings = {
-    '\x1b[A': -0.025,
-    '\x1b[B': 0.025,
+    "\x1b[A": -0.025,
+    "\x1b[B": 0.025,
 }
+
 
 def getKey(settings):
     tty.setraw(sys.stdin.fileno())
     key = sys.stdin.read(1)
-    if key == '\x1b':
+    if key == "\x1b":
         key += sys.stdin.read(2)
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
     return key
@@ -64,7 +65,7 @@ def restoreTerminalSettings(old_settings):
 
 
 def vels(speed, turn):
-    return 'Current:\tlinear %s\tangular %s ' % (speed, turn)
+    return "Current:\tlinear %s\tangular %s " % (speed, turn)
 
 
 def main():
@@ -72,10 +73,12 @@ def main():
 
     rclpy.init()
 
-    node = rclpy.create_node('keyboard_teleop')
+    node = rclpy.create_node("keyboard_teleop")
 
-    pub = node.create_publisher(Twist, '/cmd_vel', 10)
-    blade_pub = node.create_publisher(Float64MultiArray, '/position_controller/commands', 10)
+    pub = node.create_publisher(Twist, "/cmd_vel", 10)
+    blade_pub = node.create_publisher(
+        Float64MultiArray, "/position_controller/commands", 10
+    )
 
     spinner = threading.Thread(target=rclpy.spin, args=(node,))
     spinner.start()
@@ -110,7 +113,10 @@ def main():
                     print(msg)
                 status = (status + 1) % 15
             elif key in bladeBindings:
-                blade_position = max(min(blade_position + bladeBindings[key], max_blade_position), min_blade_position)
+                blade_position = max(
+                    min(blade_position + bladeBindings[key], max_blade_position),
+                    min_blade_position,
+                )
                 blade_msg = Float64MultiArray()
                 blade_msg.data = [blade_position]
                 blade_pub.publish(blade_msg)
@@ -118,7 +124,7 @@ def main():
             else:
                 x = 0.0
                 th = 0.0
-                if key == '\x03':
+                if key == "\x03":
                     break
 
     except Exception as e:
@@ -135,5 +141,5 @@ def main():
         spinner.join()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

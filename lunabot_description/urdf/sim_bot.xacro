@@ -154,8 +154,8 @@
     <inertial>
       <mass value="2.27" />
       <origin xyz="0 0 0" />
-      <inertia ixx="0.0255" ixy="0.0" ixz="0.0"
-        iyy="0.0255" iyz="0.0" izz="0.0510" />> </inertial>
+      <inertia ixx="0.0255" ixy="0.0" ixz="0.0" iyy="0.0255" iyz="0.0" izz="0.0510" />
+></inertial>
 
     <collision>
       <geometry>

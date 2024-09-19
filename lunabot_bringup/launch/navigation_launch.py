@@ -11,7 +11,6 @@ from nav2_common.launch import RewrittenYaml
 
 
 def generate_launch_description():
-
     bringup_dir = get_package_share_directory("lunabot_bringup")
 
     namespace = LaunchConfiguration("namespace")

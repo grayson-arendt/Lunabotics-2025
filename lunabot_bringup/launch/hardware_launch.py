@@ -3,16 +3,14 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import PathJoinSubstitution
 from ament_index_python.packages import (
     get_package_share_path,
     get_package_share_directory,
 )
-from launch.substitutions import PathJoinSubstitution
-from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
 
 
 def generate_launch_description():
-
     realsense_launch_path = os.path.join(
         get_package_share_path("realsense2_camera"),
         "launch",
@@ -77,19 +75,19 @@ def generate_launch_description():
     imu_rotator = Node(package="lunabot_autonomous", executable="imu_rotator")
 
     d455_imu_filter = Node(
-                package='imu_complementary_filter',
-                executable='complementary_filter_node',
-                name='complementary_filter_gain_node',
-                output='screen',
-                parameters=[
-                    {'publish_tf': False},
-                    {'fixed_frame': "odom"},
-                    {'do_bias_estimation': True},
-                    {'do_adaptive_gain': True},
-                    {'use_mag': False},
-                    {'gain_acc': 0.01},
-                    {'gain_mag': 0.01},
-                ],        
+        package="imu_complementary_filter",
+        executable="complementary_filter_node",
+        name="complementary_filter_gain_node",
+        output="screen",
+        parameters=[
+            {"publish_tf": False},
+            {"fixed_frame": "odom"},
+            {"do_bias_estimation": True},
+            {"do_adaptive_gain": True},
+            {"use_mag": False},
+            {"gain_acc": 0.01},
+            {"gain_mag": 0.01},
+        ],
     )
 
     lidar1_filter = Node(
@@ -138,7 +136,7 @@ def generate_launch_description():
                 "freq": 30.0,
             }
         ],
-        arguments=['--ros-args', '--disable-stdout-logs', '--disable-rosout-logs'],
+        arguments=["--ros-args", "--disable-stdout-logs", "--disable-rosout-logs"],
     )
 
     robot_controller = Node(
@@ -150,17 +148,23 @@ def generate_launch_description():
                 "outdoor_mode": False,
             }
         ],
-        arguments=['--ros-args', '--log-level', 'INFO'],
+        arguments=["--ros-args", "--log-level", "INFO"],
     )
 
     hardware_monitor = Node(package="lunabot_autonomous", executable="hardware_monitor")
 
     ekf = Node(
-            package='robot_localization',
-            executable='ekf_node',
-            name='ekf_filter_node',
-            output='screen',
-            parameters=[os.path.join(get_package_share_directory("lunabot_bringup"), 'params', 'ekf_params.yaml')],
+        package="robot_localization",
+        executable="ekf_node",
+        name="ekf_filter_node",
+        output="screen",
+        parameters=[
+            os.path.join(
+                get_package_share_directory("lunabot_bringup"),
+                "params",
+                "ekf_params.yaml",
+            )
+        ],
     )
 
     apriltag = Node(
@@ -192,7 +196,16 @@ def generate_launch_description():
     base_link_to_d455_tf = Node(
         package="tf2_ros",
         executable="static_transform_publisher",
-        arguments=["0.4305", "0", "0.6096", "0", "-0.5236", "0", "base_link", "d455_link"],
+        arguments=[
+            "0.4305",
+            "0",
+            "0.6096",
+            "0",
+            "-0.5236",
+            "0",
+            "base_link",
+            "d455_link",
+        ],
         output="screen",
         name="static_transform_publisher",
     )
