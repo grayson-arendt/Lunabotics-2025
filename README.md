@@ -37,7 +37,7 @@ Note: You will need to have already installed ROS 2 Humble before continuing wit
 
 #### (Optional) 1. Append lines to .bashrc
 
-.bashrc is a script that runs everytime a new terminal window is opened and has various configurations, environment variables, and commands for setup. There is a bug in the VSCode terminal that will cause a symbol lookup error, so you have to unset the path variable using `unset GTK_path`. `source /opt/ros/humble/setup.bash` simply runs the setup script for ROS 2 Humble.
+.bashrc is a script that runs everytime a new terminal window is opened and has various configurations, environment variables, and commands for setup. There is a bug in the VSCode terminal that will cause a symbol lookup error, so you have to unset the path variable using `unset GTK_path`. If you haven't already added `source /opt/ros/humble/setup.bash` to your .bashrc file, it simply runs the setup script for ROS 2 Humble.
 
 ```bash
 echo 'unset GTK_PATH' >> ~/.bashrc
@@ -161,14 +161,13 @@ ros2 launch lunabot_bringup navigation_launch.py
 
 In RViz2 on the host computer, you will now be able to select a "Nav2 Goal" in the GUI and have the robot navigate to that location.
 
-#### (Optional) 7. Start navigator client
+#### (Optional) 7. Start navigation client
 
 ```bash
-ros2 run lunabot_autonomous navigator_client
+ros2 run lunabot_system navigation_client
 ```
 
-The action client will send two goals, one for excavation zone and another for construction zone. After the goal has been reached, it will publish to /control topic and enable the specific
-motors for the mechanisms for the zone.
+The action client will send two goals, one for excavation zone and another for construction zone.
 
 <p align="center">
   <img src="sample.png">
@@ -176,71 +175,62 @@ motors for the mechanisms for the zone.
 
 ## Project Structure
 
-**lunabot_autonomous**
-
-- **src**
-  - **physical_robot**
-    - **control**
-      - **robot_controller.cpp**: This node is responsible for generating control commands (like percent output) for the robot’s physical motors. It receives higher-level commands and converts them into motor control signals that are sent using the sparkcan package.
-    - **system**
-      - **hardware_monitor.cpp**: A monitoring system that tracks the status of various sensors and checks their liveliness. If a sensor fails to send data or shows errors, this node will flag the issue and print colored error text in terminal.
-      - **imu_rotator.cpp**: Handles IMU (Inertial Measurement Unit) data. It converts the raw IMU readings into a coordinate frame that can be used for localization, rotating them into the ENU (East-North-Up) frame.
-      - **navigator_client.cpp**: An action client that sends autonomous goals to the robot. It communicates with the navigation system to direct the robot to specified waypoints and publishes a control message that is used by robot_controller.cpp. This control message sends a boolean whether or not to enable a robot mechanism.
-  - **simulated_robot**
-    - **teleop**
-      - **keyboard_teleop.py**: A Python script for manually controlling the robot in the simulation using a keyboard. The script maps key presses to movement commands for the robot, enabling driving and blade movement in Gazebo.
-    - **blade_joint_controller.cpp**: This node controls the rotation of the bulldozer blade in the Gazebo simulation. It manages the blade’s positioning by sending commands to the ros2_control position controller.
-    - **topic_remap.cpp**: Remaps topics between the ros2_control interface and the simulation environment. This is needed to ensure the simulation is receiving and sending data on the correct topics for motor control and odometry.
-
-**lunabot_bringup**
-
-- **behavior_trees**
-  - **navigate_to_pose_w_replanning_goal_patience_and_recovery.xml**: A behavior tree used in conjunction with the Navigation2 stack. This tree allows the robot to navigate autonomously while handling issues like goal replanning, patience when navigating to a location, and recovery behaviors if obstacles are encountered.
-- **config**
-  - **default_view.rviz**: Configuration file for RViz2, defining how the robot and its environment are displayed. This includes camera angles, display options for sensors, and robot model visualization settings.
+**lunabot_bringup**: This package contains the launch files to bring up various robot components.
 - **launch**
-  - **external_launch.py**: Launches the necessary nodes for RViz2 and robot state/joint publishers. This is used on external systems to visualize the robot and its state in real time.
-  - **hardware_launch.py**: Launches the nodes required to bring up the physical robot's hardware, including lidar sensors, depth cameras, and motor controllers.
+  - **external_launch.py**: Launches the necessary nodes for RViz2 and robot state/joint publishers. This is used on an external computer/laptop to visualize the robot and its state in real time.
+  - **hardware_launch.py**: Launches the nodes required to bring up the physical robot's hardware, including lidar sensors, depth cameras, and robot controller.
   - **mapping_launch.py**: Launches RTAB-Map, a real-time appearance-based mapping node used for simultaneous localization and mapping (SLAM). This allows the robot to create a map of its environment while also localizing itself within that map.
   - **navigation_launch.py**: Launches Navigation2, which provides autonomous navigation capabilities. It uses sensor data, the map, and the robot’s position to plan and execute paths to goals set by the user or an action client.
+  - **simulation_launch.py**: Launches the necessary nodes for simulating the robot in Gazebo and RViz2.
+
+**lunabot_config**: This package contains configuration files such as behavior trees, RViz settings, and parameters for the robot and sensors.
+- **behavior_trees**
+  - **navigate_to_pose_w_replanning_goal_patience_and_recovery.xml**: A behavior tree used with the Navigation2 stack to enable goal replanning, patience, and recovery behaviors.
+- **config**
+  - **robot_view.rviz**: Configuration file for RViz2, defining how the robot and its environment are displayed.
 - **params**
-  - **a3_lidar_params.yaml**: Parameter file that contains specific settings for processing data from the RPLidar A3. This includes parameters for the laser filter and other lidar-specific settings.
-  - **ekf_params.yaml**: Parameters for the Extended Kalman Filter (EKF) used by the robot localization node. This file defines how sensor data like IMU, GPS, and wheel encoders are fused to provide an accurate estimate of the robot’s position.
-  - **nav2_params.yaml**: Configuration parameters for the Navigation2 stack, including settings for path planners, controllers, and costmaps used during autonomous navigation.
-  - **s2l_lidar_params.yaml**: Similar to `a3_lidar_params.yaml`, but this file contains parameters specific to the RPLidar S2L.
-  - **sim_params.yaml**: Defines parameters for the ros2_control controllers that simulate the robot’s movement in Gazebo.
-  - **tag_params.yaml**: Parameters for the apriltag_ros package, which detects AprilTag fiducial markers for robot localization and mapping purposes.
+  - **a3_lidar_params.yaml**: Parameter file containing settings for processing data from the RPLidar A3.
+  - **ekf_params.yaml**: Parameters for the Extended Kalman Filter (EKF) used by the robot localization node to fuse sensor data like IMU, lidar odometry, and wheel encoders.
+  - **nav2_params.yaml**: Configuration parameters for the Navigation2 stack.
+  - **s2_lidar_params.yaml**: Similar to `a3_lidar_params.yaml`, but for the RPLidar S2L.
+  - **sim_params.yaml**: Parameters for the ros2_control controllers that simulate the robot’s movement in Gazebo.
+  - **tag_params.yaml**: Parameters for the apriltag_ros package, which detects AprilTag fiducial markers for robot localization.
 
-**lunabot_description**
+**lunabot_external**
+- **rf2o_laser_odometry**: A package used to compute laser odometry, estimating the robot’s position over time based on lidar data.
 
-- **meshes**: Contains the 3D models (in STL format) used to visualize the robot in RViz2 and Gazebo.
+**lunabot_simulation**: This package contains assets and code for simulating the robot in Gazebo.
+- **meshes**: Contains the 3D models used to visualize the robot in Gazebo and RViz2.
   - **base_link.stl**: Mesh for the robot's base frame.
   - **blade_link.stl**: Mesh for the robot's bulldozer blade.
   - **camera_link.stl**: Mesh for the camera.
   - **ebox_link.stl**: Mesh for the electronics box containing the onboard computer and other electronics.
-  - **lidar1_link.stl**: Mesh for the mounting of the A3 lidar.
-  - **lidar2_link.stl**: Mesh for the S2 lidar.
+  - **lidar1_link.stl**: Mesh for the RPLidar A3 mount.
+  - **lidar2_link.stl**: Mesh for the RPLidar S2 mount.
   - **nuc_link.stl**: Mesh for the Intel NUC.
-  - **wheel_link.stl**: Mesh for the robot's wheels.
-- **models**: Contains models of environmental objects used in the Gazebo simulation.
-  - **column**: A model of the Artemis Arena central support column.
-  - **lunar_surface**: A model representing the lunar surface, simulating rough terrain for the robot.
-  - **rock_rough**: A rough rock model used for simulating obstacles.
-  - **rock_round**: A round rock model used for simulating obstacles.
-  - **textures**: Texture files used to provide realistic appearances to the models in the Gazebo simulation.
+  - **wheel_link.stl**: Mesh for the robot’s wheels.
+- **models**: Contains environmental models for the Gazebo simulation.
+  - **column.stl**: Model of the Artemis Arena central support column.
+  - **lunar_surface.stl**: A model representing the lunar surface, simulating rough terrain for the robot.
+  - **rock_rough.stl**: A rough rock model used for simulating obstacles.
+  - **rock_round.stl**: A round rock model used for simulating obstacles.
 - **urdf**
   - **common_properties.xacro**: Defines common properties like material colors for various parts of the robot.
-  - **sim_bot.xacro**: The URDF (Unified Robot Description Format) file for the robot used in Gazebo simulations, containing links, joints, and sensors specific to the simulated version of the robot.
-  - **test_bot.xacro**: The URDF file for a test version of the physical robot. This is used during development to visualize while experimenting with different configurations on the test robot.
-- **worlds**: Contains the Gazebo world definitions for the simulation.
-  - **artemis_arena.world**: A Gazebo world simulating the Artemis Arena, which includes terrain and obstacles that resemble the conditions the robot may face during the Lunabotics competition.
+  - **sim_bot.xacro**: URDF file for the simulated robot in Gazebo.
+  - **test_bot.xacro**: URDF file for a test version of the physical robot.
+- **worlds**
+  - **artemis_arena.world**: A Gazebo world simulating the Artemis Arena, which includes terrain and obstacles similar to the Lunabotics competition.
 
-**lunabot_external**
-
-- **rf2o_laser_odometry**: A package from an external source used to compute laser odometry (estimating the robot's position over time based on lidar data). This helps in providing continuous localization without relying solely on wheel encoders.
+**lunabot_system**: This package contains motor controller and utilities to operate the physical robot.
+- **src**
+  - **control**
+    - **robot_controller.cpp**: This node controls the entire robot, processing both autonomous `cmd_vel` commands and manual inputs from a game controller.
+    - **navigation_client.cpp**: This action client sends goals to the navigation action server and activates robot mechanisms when each goal is reached.
+  - **utils**
+    - **hardware_monitor.cpp**: Monitors various hardware components (e.g., sensors) and flags errors if they fail to send data.
+    - **imu_rotator.cpp**: Processes IMU data, rotating it into the East-North-Up (ENU) frame for use in localization.
 
 **scripts**
-
-- **canable_start.sh**: A script for setting up the CAN interface on the robot. This ensures that the robot’s motor controllers can communicate with the onboard computer via the CAN bus.
-- **install_dependencies.sh**: A script that installs all the necessary dependencies for the robot's software stack, such as ROS 2 packages.
-- **setup_udev_rules.sh**: A script for configuring udev rules specifically for the Intel RealSense D456 camera, ensuring that the device is automatically recognized and configured when connected to the robot.
+- **canable_start.sh**: A script for setting up the CAN interface, enabling communication between motor controllers and the onboard computer.
+- **install_dependencies.sh**: A script to install the necessary dependencies for the robot's software stack.
+- **setup_udev_rules.sh**: A script for configuring udev rules for the Intel RealSense D456 camera.

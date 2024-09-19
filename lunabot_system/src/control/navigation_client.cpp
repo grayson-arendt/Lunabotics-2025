@@ -1,35 +1,34 @@
+/**
+ * @file navigation_client.cpp
+ * @author Grayson Arendt
+ * @date 9/18/2024
+ */
+
 #include "geometry_msgs/msg/pose.hpp"
-#include "lunabot_autonomous/msg/control_state.hpp"
 #include "nav2_msgs/action/navigate_to_pose.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 
 /**
- * @brief Sends two goals to the navigation action server as an action client.
- * @details After a goal is reached, this node will publish booleans to the
- * /control topic to enable the specific mechanisms for that goal.
- *
- * @author Grayson Arendt
+ * @brief This NavigationClient class sends two goals to the navigation action
+ * server as an action client.
  */
-class NavigatorClient : public rclcpp::Node {
+class NavigationClient : public rclcpp::Node {
 public:
   using NavigateToPose = nav2_msgs::action::NavigateToPose;
   using GoalHandleNavigate = rclcpp_action::ClientGoalHandle<NavigateToPose>;
 
   /**
-   * @brief Constructor for NavigatorClient class.
+   * @brief Constructor for NavigationClient class.
    */
-  NavigatorClient()
+  NavigationClient()
       : Node("navigator_client"), goal_reached(false), goal_aborted(false),
         goal_canceled(false), navigate_to_excavation(true) {
     this->nav_to_pose_client_ =
         rclcpp_action::create_client<NavigateToPose>(this, "navigate_to_pose");
     this->timer_ =
         this->create_wall_timer(std::chrono::milliseconds(500),
-                                std::bind(&NavigatorClient::send_goal, this));
-    control_state_publisher_ =
-        this->create_publisher<lunabot_autonomous::msg::ControlState>(
-            "control_state", 10);
+                                std::bind(&NavigationClient::send_goal, this));
   }
 
   /**
@@ -48,7 +47,7 @@ public:
     auto send_goal_options =
         rclcpp_action::Client<NavigateToPose>::SendGoalOptions();
     send_goal_options.result_callback = std::bind(
-        &NavigatorClient::result_callback, this, std::placeholders::_1);
+        &NavigationClient::result_callback, this, std::placeholders::_1);
 
     auto goal_msg = NavigateToPose::Goal();
     geometry_msgs::msg::Pose goal_pose;
@@ -84,39 +83,6 @@ public:
 
 private:
   /**
-   * @brief Enables manual control.
-   */
-  void enable_manual() {
-    auto control_state_msg = lunabot_autonomous::msg::ControlState();
-
-    control_state_msg.is_manual_enabled = true;
-
-    control_state_publisher_->publish(control_state_msg);
-  }
-
-  /**
-   * @brief Disables navigation control through /cmd_vel topic.
-   */
-  void disable_navigation() {
-    auto control_state_msg = lunabot_autonomous::msg::ControlState();
-
-    control_state_msg.is_navigation_enabled = false;
-
-    control_state_publisher_->publish(control_state_msg);
-  }
-
-  /**
-   * @brief Enables navigation control through /cmd_vel topic.
-   */
-  void enable_navigation() {
-    auto control_state_msg = lunabot_autonomous::msg::ControlState();
-
-    control_state_msg.is_navigation_enabled = true;
-
-    control_state_publisher_->publish(control_state_msg);
-  }
-
-  /**
    * @brief Callback function for result.
    * @param result The result of the navigation goal.
    */
@@ -141,24 +107,17 @@ private:
       navigate_to_excavation = false;
       goal_reached = false;
 
-      // Disable setting navigation motor speeds in robot_controller
-      disable_navigation();
-
       /* Do digging script
 
 
 
       */
-      enable_navigation();
       send_goal();
     }
 
     else if (!navigate_to_excavation && goal_reached) {
       RCLCPP_INFO(this->get_logger(),
                   "\033[1;32mCONSTRUCTION ZONE REACHED\033[0m");
-
-      // Disable setting navigation motor speeds in robot_controller
-      disable_navigation();
 
       /* Do depositing script
 
@@ -177,20 +136,16 @@ private:
       RCLCPP_ERROR(this->get_logger(),
                    "\033[1;31mNAVIGATION TO CONSTRUCTION ZONE FAILED, ENABLING "
                    "MANUAL CONTROL\033[0m");
-      this->enable_manual();
     }
 
     else {
       RCLCPP_ERROR(
           this->get_logger(),
           "\033[1;31mUKNOWN RESULT CODE, ENABLING MANUAL CONTROL\033[0m");
-      this->enable_manual();
     }
   }
 
   rclcpp_action::Client<NavigateToPose>::SharedPtr nav_to_pose_client_;
-  rclcpp::Publisher<lunabot_autonomous::msg::ControlState>::SharedPtr
-      control_state_publisher_;
   rclcpp::TimerBase::SharedPtr timer_;
   bool goal_reached, goal_aborted, goal_canceled;
   bool navigate_to_excavation;
@@ -199,11 +154,11 @@ private:
 /**
  * @brief Main function.
  *
- * Initializes and spins the NavigatorClient node.
+ * Initializes and spins the NavigationClient node.
  */
 int main(int argc, char **argv) {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<NavigatorClient>());
+  rclcpp::spin(std::make_shared<NavigationClient>());
   rclcpp::shutdown();
   return 0;
 }

@@ -7,7 +7,7 @@
 	<link name="base_link">
 		<visual>
 			<geometry>
-				<mesh filename="file:///$(find lunabot_description)/meshes/base_link.stl" />
+				<mesh filename="file:///$(find lunabot_simulation)/meshes/base_link.stl" />
 			</geometry>
 			<origin xyz="0 0 0.085" rpy="0 0 0" />
 			<material name="light_grey" />
@@ -17,7 +17,7 @@
 	<link name="ebox_link">
 		<visual>
 			<geometry>
-				<mesh filename="file:///$(find lunabot_description)/meshes/ebox_link.stl" />
+				<mesh filename="file:///$(find lunabot_simulation)/meshes/ebox_link.stl" />
 			</geometry>
 			<origin xyz="0 0 0" rpy="0 0 0" />
 			<material name="white" />
@@ -27,7 +27,7 @@
 	<link name="front_right_wheel_link">
 		<visual>
 			<geometry>
-				<mesh filename="file:///$(find lunabot_description)/meshes/wheel_link.stl" />
+				<mesh filename="file:///$(find lunabot_simulation)/meshes/wheel_link.stl" />
 			</geometry>
 			<origin xyz="0 0 0" rpy="${pi / 2.0} 0 0" />
 			<material name="green" />
@@ -37,7 +37,7 @@
 	<link name="front_left_wheel_link">
 		<visual>
 			<geometry>
-				<mesh filename="file:///$(find lunabot_description)/meshes/wheel_link.stl" />
+				<mesh filename="file:///$(find lunabot_simulation)/meshes/wheel_link.stl" />
 			</geometry>
 			<origin xyz="0 0 0" rpy="${-pi / 2.0} 0 0" />
 			<material name="green" />
@@ -47,7 +47,7 @@
 	<link name="rear_right_wheel_link">
 		<visual>
 			<geometry>
-				<mesh filename="file:///$(find lunabot_description)/meshes/wheel_link.stl" />
+				<mesh filename="file:///$(find lunabot_simulation)/meshes/wheel_link.stl" />
 			</geometry>
 			<origin xyz="0 0 0" rpy="${pi / 2.0} 0 0" />
 			<material name="green" />
@@ -57,7 +57,7 @@
 	<link name="rear_left_wheel_link">
 		<visual>
 			<geometry>
-				<mesh filename="file:///$(find lunabot_description)/meshes/wheel_link.stl" />
+				<mesh filename="file:///$(find lunabot_simulation)/meshes/wheel_link.stl" />
 			</geometry>
 			<origin xyz="0 0 0" rpy="${-pi / 2.0} 0 0" />
 			<material name="green" />
@@ -67,7 +67,7 @@
 	<link name="lidar1_link">
 		<visual>
 			<geometry>
-				<mesh filename="file:///$(find lunabot_description)/meshes/lidar1_link.stl" />
+				<mesh filename="file:///$(find lunabot_simulation)/meshes/lidar1_link.stl" />
 			</geometry>
 			<origin xyz="0 0 0" rpy="0 0 ${pi / 2.0}" />
 			<material name="black" />
@@ -77,17 +77,17 @@
 	<link name="lidar2_link">
 		<visual>
 			<geometry>
-				<mesh filename="file:///$(find lunabot_description)/meshes/lidar2_link.stl" />
+				<mesh filename="file:///$(find lunabot_simulation)/meshes/lidar2_link.stl" />
 			</geometry>
 			<origin xyz="0 0 0" rpy="0 ${pi} 0" />
 			<material name="black" />
 		</visual>
 	</link>
 
-	<link name="d455_link">
+	<link name="d456_link">
 		<visual>
 			<geometry>
-				<mesh filename="file:///$(find lunabot_description)/meshes/camera_link.stl" />
+				<mesh filename="file:///$(find lunabot_simulation)/meshes/camera_link.stl" />
 			</geometry>
 			<origin xyz="0 0.305 0" rpy="0 0 0" />
 			<material name="camera_grey" />
@@ -97,7 +97,7 @@
 	<link name="nuc_link">
 		<visual>
 			<geometry>
-				<mesh filename="file:///$(find lunabot_description)/meshes/nuc_link.stl" />
+				<mesh filename="file:///$(find lunabot_simulation)/meshes/nuc_link.stl" />
 			</geometry>
 			<origin xyz="0 0 0" rpy="${pi} 0 ${pi}" />
 			<material name="black" />
@@ -148,9 +148,9 @@
 		<origin xyz="0.04 0 0.21" rpy="0 0 0" />
 	</joint>
 
-	<joint name="base_d455_joint" type="fixed">
+	<joint name="base_d456_joint" type="fixed">
 		<parent link="base_link" />
-		<child link="d455_link" />
+		<child link="d456_link" />
 		<origin xyz="0.305 0.1 0.2" rpy="0 0 0" />
 	</joint>
 

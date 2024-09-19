@@ -10,23 +10,28 @@ from launch.actions import (
     DeclareLaunchArgument,
     ExecuteProcess,
     IncludeLaunchDescription,
-    RegisterEventHandler,
 )
 
 
 def generate_launch_description():
+    declare_control = DeclareLaunchArgument(
+        "control_method",
+        default_value="keyboard",
+        description="Select control method: 'keyboard' or other options",
+    )
+
     rviz_config_path = os.path.join(
-        get_package_share_path("lunabot_bringup"),
-        "config",
+        get_package_share_path("lunabot_config"),
+        "rviz",
         "robot_view.rviz",
     )
 
     urdf_path = os.path.join(
-        get_package_share_path("lunabot_description"), "urdf", "sim_bot.xacro"
+        get_package_share_path("lunabot_simulation"), "urdf", "sim_bot.xacro"
     )
 
     world_path = os.path.join(
-        get_package_share_path("lunabot_description"), "worlds", "artemis_arena.world"
+        get_package_share_path("lunabot_simulation"), "worlds", "artemis_arena.world"
     )
 
     robot_description = ParameterValue(Command(["xacro ", urdf_path]), value_type=str)
@@ -102,7 +107,7 @@ def generate_launch_description():
             "--",
             "bash",
             "-c",
-            "ros2 run lunabot_autonomous keyboard_teleop.py;  exec bash",
+            "ros2 run lunabot_simulation keyboard_teleop.py;  exec bash",
         ],
         condition=LaunchConfigurationEquals("control_method", "keyboard"),
         output="screen",
@@ -116,11 +121,51 @@ def generate_launch_description():
         name="static_transform_publisher",
     )
 
-    blade_joint_controller_node = Node(
-        package="lunabot_autonomous", executable="blade_joint_controller"
+    odom_base_link_tf = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        arguments=["0", "0", "0", "0", "0", "0", "odom", "base_link"],
+        output="screen",
+        name="static_transform_publisher",
     )
 
-    topic_remap_node = Node(package="lunabot_autonomous", executable="topic_remap")
+    ekf_node = Node(
+        package="robot_localization",
+        executable="ekf_node",
+        name="ekf_filter_node",
+        output="screen",
+        parameters=[
+            os.path.join(
+                get_package_share_path("lunabot_config"),
+                "params",
+                "ekf_params.yaml",
+            )
+        ],
+    )
+
+    imu_filter_node = Node(
+        package="imu_complementary_filter",
+        executable="complementary_filter_node",
+        name="complementary_filter_gain_node",
+        output="screen",
+        parameters=[
+            {"publish_tf": False},
+            {"fixed_frame": "odom"},
+            {"do_bias_estimation": True},
+            {"do_adaptive_gain": True},
+            {"use_mag": False},
+            {"gain_acc": 0.01},
+            {"gain_mag": 0.01},
+        ],
+    )
+
+    blade_joint_controller_node = Node(
+        package="lunabot_simulation", executable="blade_joint_controller"
+    )
+
+    topic_remapper_node = Node(
+        package="lunabot_simulation", executable="topic_remapper"
+    )
 
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
@@ -154,18 +199,21 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
-            joint_state_broadcaster_spawner,
-            diff_drive_controller_spawner,
-            position_controller_spawner,
+            declare_control,
             gazebo_launch,
             rviz2_node,
-            blade_joint_controller_node,
-            robot_state_publisher_node,
-            spawn_entity_node,
             joy_node,
             joy_teleop_node,
             keyboard_teleop_node,
-            topic_remap_node,
+            ekf_node,
+            imu_filter_node,
+            spawn_entity_node,
+            joint_state_broadcaster_spawner,
+            diff_drive_controller_spawner,
+            position_controller_spawner,
+            blade_joint_controller_node,
+            robot_state_publisher_node,
+            topic_remapper_node,
             map_to_odom_tf,
         ]
     )

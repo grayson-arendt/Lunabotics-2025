@@ -1,3 +1,9 @@
+/**
+ * @file robot_controller.cpp
+ * @author Grayson Arendt
+ * @date 9/18/2024
+ */
+
 #include <chrono>
 #include <iomanip>
 #include <iostream>
@@ -5,7 +11,6 @@
 #include <unistd.h>
 
 #include "geometry_msgs/msg/twist.hpp"
-#include "lunabot_autonomous/msg/control_state.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/joy.hpp"
 
@@ -36,12 +41,6 @@ public:
         "cmd_vel", 10,
         std::bind(&RobotController::velocity_callback, this,
                   std::placeholders::_1));
-
-    control_state_subscriber_ =
-        create_subscription<lunabot_autonomous::msg::ControlState>(
-            "control_state", 10,
-            std::bind(&RobotController::control_state_callback, this,
-                      std::placeholders::_1));
 
     joystick_subscriber_ = create_subscription<sensor_msgs::msg::Joy>(
         "joy", 10,
@@ -215,16 +214,6 @@ private:
   }
 
   /**
-   * @brief Callback for ControlState messages.
-   */
-  void
-  control_state_callback(const lunabot_autonomous::msg::ControlState::SharedPtr
-                             control_state_msg) {
-    manual_enabled_ = control_state_msg->is_manual_enabled;
-    navigation_enabled_ = control_state_msg->is_navigation_enabled;
-  }
-
-  /**
    * @brief Retrieves button value based on the current controller mode.
    */
   int get_button(const sensor_msgs::msg::Joy::SharedPtr &joy_msg,
@@ -246,8 +235,6 @@ private:
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr
       velocity_subscriber_;
   rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joystick_subscriber_;
-  rclcpp::Subscription<lunabot_autonomous::msg::ControlState>::SharedPtr
-      control_state_subscriber_;
 
   // Robot states, controller modes, and motor speeds
   bool manual_enabled_, navigation_enabled_, robot_disabled_;

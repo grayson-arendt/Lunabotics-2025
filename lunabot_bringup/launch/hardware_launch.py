@@ -61,9 +61,9 @@ def generate_launch_description():
     realsense = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(realsense_launch_path),
         launch_arguments={
-            "camera_name": "d455",
-            "camera_namespace": "d455",
-            "device_type": "d455",
+            "camera_name": "d456",
+            "camera_namespace": "d456",
+            "device_type": "d456",
             "enable_gyro": "true",
             "enable_accel": "true",
             "unite_imu_method": "2",
@@ -72,9 +72,7 @@ def generate_launch_description():
         }.items(),
     )
 
-    imu_rotator = Node(package="lunabot_autonomous", executable="imu_rotator")
-
-    d455_imu_filter = Node(
+    d456_imu_filter = Node(
         package="imu_complementary_filter",
         executable="complementary_filter_node",
         name="complementary_filter_gain_node",
@@ -97,7 +95,7 @@ def generate_launch_description():
         parameters=[
             PathJoinSubstitution(
                 [
-                    get_package_share_directory("lunabot_bringup"),
+                    get_package_share_directory("lunabot_config"),
                     "params",
                     "a3_lidar_params.yaml",
                 ]
@@ -112,7 +110,7 @@ def generate_launch_description():
         parameters=[
             PathJoinSubstitution(
                 [
-                    get_package_share_directory("lunabot_bringup"),
+                    get_package_share_directory("lunabot_config"),
                     "params",
                     "s2_lidar_params.yaml",
                 ]
@@ -140,7 +138,7 @@ def generate_launch_description():
     )
 
     robot_controller = Node(
-        package="lunabot_autonomous",
+        package="lunabot_system",
         executable="robot_controller",
         parameters=[
             {
@@ -151,7 +149,9 @@ def generate_launch_description():
         arguments=["--ros-args", "--log-level", "INFO"],
     )
 
-    hardware_monitor = Node(package="lunabot_autonomous", executable="hardware_monitor")
+    hardware_monitor = Node(package="lunabot_system", executable="hardware_monitor")
+
+    imu_rotator = Node(package="lunabot_system", executable="imu_rotator")
 
     ekf = Node(
         package="robot_localization",
@@ -160,7 +160,7 @@ def generate_launch_description():
         output="screen",
         parameters=[
             os.path.join(
-                get_package_share_directory("lunabot_bringup"),
+                get_package_share_directory("lunabot_config"),
                 "params",
                 "ekf_params.yaml",
             )
@@ -173,14 +173,14 @@ def generate_launch_description():
         executable="apriltag_node",
         parameters=[
             os.path.join(
-                get_package_share_directory("lunabot_bringup"),
+                get_package_share_directory("lunabot_config"),
                 "params",
                 "tag_params.yaml",
             )
         ],
         remappings=[
-            ("/image_rect", "/d455/color/image_raw"),
-            ("/camera_info", "/d455/color/camera_info"),
+            ("/image_rect", "/d456/color/image_raw"),
+            ("/camera_info", "/d456/color/camera_info"),
             ("/detections", "/tag_detections"),
         ],
     )
@@ -193,7 +193,7 @@ def generate_launch_description():
         name="static_transform_publisher",
     )
 
-    base_link_to_d455_tf = Node(
+    base_link_to_d456_tf = Node(
         package="tf2_ros",
         executable="static_transform_publisher",
         arguments=[
@@ -204,7 +204,7 @@ def generate_launch_description():
             "-0.5236",
             "0",
             "base_link",
-            "d455_link",
+            "d456_link",
         ],
         output="screen",
         name="static_transform_publisher",
@@ -218,11 +218,11 @@ def generate_launch_description():
             apriltag,
             realsense,
             imu_rotator,
-            d455_imu_filter,
+            d456_imu_filter,
             ekf,
             robot_controller,
             hardware_monitor,
-            base_link_to_d455_tf,
+            base_link_to_d456_tf,
             map_to_odom_tf,
         ]
     )

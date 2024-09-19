@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>lunabot_config</name>
+  <version>1.0.0</version>
+  <description>This package contains configuration files and parameters.</description>
+  <maintainer email="grayson.n.arendt5@gmail.com">Grayson Arendt</maintainer>
+  <license>MIT</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <export>
+    <gazebo_ros gazebo_model_path="${prefix}/models"/>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
+

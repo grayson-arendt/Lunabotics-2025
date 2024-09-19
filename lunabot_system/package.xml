@@ -1,19 +1,27 @@
 <?xml version="1.0"?>
-<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>lunabot_description</name>
+
+  <name>lunabot_system</name>
   <version>1.0.0</version>
-  <description>This package contains the URDF, worlds, and models for visualization in RViz2.</description>
+  <description>This package contains code for the autonomous robot system.</description>
   <maintainer email="grayson.n.arendt5@gmail.com">Grayson Arendt</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <depend>rclcpp</depend>
+  <depend>rclcpp_action</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav2_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>sparkcan</depend>
+
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 
   <export>
-    <gazebo_ros gazebo_model_path="${prefix}/models"/>
     <build_type>ament_cmake</build_type>
   </export>
+
 </package>

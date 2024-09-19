@@ -1,3 +1,9 @@
+/**
+ * @file hardware_monitor.cpp
+ * @author Grayson Arendt
+ * @date 9/18/2024
+ */
+
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/image.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
@@ -5,7 +11,6 @@
 /**
  * @class HardwareMonitor
  * @brief A class for monitoring hardware connections and status.
- * @author Grayson Arendt
  */
 class HardwareMonitor : public rclcpp::Node {
 public:

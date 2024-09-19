@@ -1,3 +1,9 @@
+/**
+ * @file imu_rotator.cpp
+ * @author Grayson Arendt
+ * @date 9/18/2024
+ */
+
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 #include <string>
@@ -7,8 +13,6 @@
  * the D455 camera.
  * @details The D455 orientation is non-standard and does not work correctly
  * with external packages.
- *
- * @author Grayson Arendt
  */
 class IMURotator : public rclcpp::Node {
 public:

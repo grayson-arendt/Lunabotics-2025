@@ -18,7 +18,7 @@ def generate_launch_description():
     bringup_dir = get_package_share_directory("lunabot_bringup")
 
     urdf_path = os.path.join(
-        get_package_share_path("lunabot_description"), "urdf", "test_bot.xacro"
+        get_package_share_path("lunabot_simulation"), "urdf", "test_bot.xacro"
     )
 
     description = xacro.process_file(urdf_path).toxml()
@@ -44,7 +44,7 @@ def generate_launch_description():
 
     declare_rviz_config_file_cmd = DeclareLaunchArgument(
         "rviz_config",
-        default_value=os.path.join(bringup_dir, "config", "robot_view.rviz"),
+        default_value=os.path.join(bringup_dir, "rviz", "robot_view.rviz"),
         description="Full path to the RVIZ config file to use",
     )
 
