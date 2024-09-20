@@ -358,7 +358,7 @@
   <joint name="base_d456_joint" type="fixed">
     <parent link="base_link" />
     <child link="d456_link" />
-    <origin xyz="0.1602565 0 0.355" rpy="0 0 0" />
+    <origin xyz="0.1602565 0 0.8" rpy="0 0 0" />
   </joint>
 
   <joint name="d456_optical_joint" type="fixed">
@@ -387,7 +387,7 @@
         </image>
         <clip>
           <near>0.05</near>
-          <far>5.0</far>
+          <far>10.0</far>
         </clip>
       </camera>
       <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
@@ -479,7 +479,7 @@
     <gravity>false</gravity>
     <sensor name="imu_sensor" type="imu">
       <always_on>true</always_on>
-      <update_rate>100</update_rate>
+      <update_rate>50</update_rate>
       <visualize>true</visualize>
       <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
         <ros>

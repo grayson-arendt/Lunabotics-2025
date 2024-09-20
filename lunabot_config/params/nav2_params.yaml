@@ -6,7 +6,7 @@ bt_navigator:
     odom_topic: /odometry/filtered
     bt_loop_duration: 10
     default_server_timeout: 20
-    default_nav_to_pose_bt_xml: "../../lunabot_bringup/behavior_trees/navigate_to_pose_w_replanning_goal_patience_and_recovery.xml"
+    default_nav_to_pose_bt_xml: "$(find-pkg-share lunabot_config)/behavior_trees/navigate_to_pose_w_replanning_goal_patience_and_recovery.xml"
 
     plugin_lib_names:
       - nav2_compute_path_to_pose_action_bt_node
@@ -124,7 +124,7 @@ global_costmap:
       robot_base_frame: base_link
       use_sim_time: false
       resolution: 0.01
-      plugins: ["static_layer", "voxel_layer", "inflation_layer"]
+      plugins: ["static_layer", "voxel_layer", "denoise_layer", "inflation_layer"]
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: true
@@ -150,6 +150,9 @@ global_costmap:
           clearing: true
           marking: true
           data_type: "PointCloud2"
+      denoise_layer:
+        plugin: "nav2_costmap_2d::DenoiseLayer"
+        enabled: True
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: true
@@ -180,12 +183,15 @@ local_costmap:
       height: 5
       resolution: 0.05
       footprint: "[ [0.635, 0.4065], [0.635, -0.4065], [-0.635, -0.4065], [-0.635, 0.4065] ]"
-      plugins: ["voxel_layer", "inflation_layer"]
+      plugins: ["voxel_layer", "denoise_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
         inflation_radius: 0.45
         footprint_clearing_enabled: true
+      denoise_layer:
+        plugin: "nav2_costmap_2d::DenoiseLayer"
+        enabled: True
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True

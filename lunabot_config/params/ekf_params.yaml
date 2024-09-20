@@ -9,7 +9,7 @@ ekf_filter_node:
                 # The period, in seconds, after which we consider a sensor to have timed out. In this event, we carry out a predict
                 # cycle on the EKF without correcting it. This parameter can be thought of as the minimum frequency with which the
                 # filter will generate new output. Defaults to 1 / frequency if not specified.
-                sensor_timeout: 0.1
+                sensor_timeout: 0.5
 
                 # ekf_localization_node and ukf_localization_node both use a 3D omnidirectional motion model. If this parameter is
                 # set to true, no 3D information will be used in your state estimate. Use this if you are operating in a planar
@@ -24,7 +24,7 @@ ekf_filter_node:
 
                 # Use this parameter to provide specify how long the tf listener should wait for a transform to become available.
                 # Defaults to 0.0 if unspecified.
-                transform_timeout: 0.0
+                transform_timeout: 0.5
 
                 # If you're having trouble, try setting this to true, and then echo the /diagnostics_agg topic to see if the node is
                 # unhappy with any settings or data.
@@ -92,7 +92,7 @@ ekf_filter_node:
                                 false,
                                 false,
                                 false,
-                                true,
+                                false,
                                 false,
                                 false,
                                 false,
@@ -137,31 +137,6 @@ ekf_filter_node:
                 # the thresholds.
                 odom0_pose_rejection_threshold: 5.0
                 odom0_twist_rejection_threshold: 1.0
-
-                odom1: wheel_odom
-                odom1_config:
-                        [
-                                true,
-                                true,
-                                true,
-                                true,
-                                true,
-                                true,
-                                false,
-                                false,
-                                false,
-                                false,
-                                false,
-                                false,
-                                false,
-                                false,
-                                false,
-                        ]
-                odom1_differential: false
-                odom1_relative: true
-                odom1_queue_size: 2
-                odom1_pose_rejection_threshold: 2.0
-                odom1_twist_rejection_threshold: 0.2
 
                 imu0: imu/data
                 imu0_config:

@@ -66,6 +66,8 @@ def generate_launch_description():
             "1.5",
             "-Y",
             "-2.5",
+            "-z",
+            "0.4",
         ],
         output="screen",
     )
@@ -121,14 +123,6 @@ def generate_launch_description():
         name="static_transform_publisher",
     )
 
-    odom_base_link_tf = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        arguments=["0", "0", "0", "0", "0", "0", "odom", "base_link"],
-        output="screen",
-        name="static_transform_publisher",
-    )
-
     ekf_node = Node(
         package="robot_localization",
         executable="ekf_node",
@@ -159,12 +153,35 @@ def generate_launch_description():
         ],
     )
 
+    lidar_odom = Node(
+        package="rf2o_laser_odometry",
+        executable="rf2o_laser_odometry_node",
+        name="rf2o_laser_odometry",
+        output="screen",
+        parameters=[
+            {
+                "laser_scan_topic": "/scan",
+                "odom_topic": "/lidar_odom",
+                "publish_tf": False,
+                "base_frame_id": "base_link",
+                "odom_frame_id": "odom",
+                "init_pose_from_topic": "",
+                "freq": 30.0,
+            }
+        ],
+        arguments=["--ros-args", "--disable-stdout-logs", "--disable-rosout-logs"],
+    )
+
     blade_joint_controller_node = Node(
         package="lunabot_simulation", executable="blade_joint_controller"
     )
 
     topic_remapper_node = Node(
         package="lunabot_simulation", executable="topic_remapper"
+    )
+
+    odom_tf_publisher = Node(
+        package="lunabot_system", executable="odom_tf_publisher"
     )
 
     joint_state_broadcaster_spawner = Node(
@@ -214,6 +231,7 @@ def generate_launch_description():
             blade_joint_controller_node,
             robot_state_publisher_node,
             topic_remapper_node,
+            lidar_odom,
             map_to_odom_tf,
         ]
     )

@@ -83,8 +83,8 @@ def main():
     spinner = threading.Thread(target=rclpy.spin, args=(node,))
     spinner.start()
 
-    speed = 0.25
-    turn = 1.0
+    speed = 0.35
+    turn = 0.45
     blade_position = 0.0
     max_blade_position = 0.75
     min_blade_position = -0.75

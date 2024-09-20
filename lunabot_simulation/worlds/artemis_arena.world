@@ -45,7 +45,7 @@
               </ode>
             </friction>
           </surface>
-          <pose>0 0 -0.4 0 0 0</pose>
+          <pose>0 0 0 0 0 0</pose>
         </collision>
         <visual name='lunar_surface'>
           <geometry>
@@ -54,7 +54,7 @@
               <scale>1 1 1</scale>
             </mesh>
           </geometry>
-          <pose>0 0 -0.4 0 0 0</pose>
+          <pose>0 0 0 0 0 0</pose>
           <material>
             <script>
               <uri>model://textures/</uri>
@@ -96,7 +96,7 @@
             </script>
           </material>
         </visual>
-        <pose>0 -2.55 -0.3 0 0 0</pose>
+        <pose>0 -2.55 0.1 0 0 0</pose>
       </link>
     </model>
 
@@ -131,7 +131,7 @@
             </script>
           </material>
         </visual>
-        <pose>0 2.55 -0.3 0 0 0</pose>
+        <pose>0 2.55 0.1 0 0 0</pose>
       </link>
     </model>
 
@@ -166,7 +166,7 @@
             </script>
           </material>
         </visual>
-        <pose>3.49 0 -0.3 0 0 0</pose>
+        <pose>3.49 0 0.1 0 0 0</pose>
       </link>
     </model>
 
@@ -201,7 +201,7 @@
             </script>
           </material>
         </visual>
-        <pose>-3.49 0 -0.3 0 0 0</pose>
+        <pose>-3.49 0 0.1 0 0 0</pose>
       </link>
     </model>
 
@@ -236,7 +236,7 @@
             </script>
           </material>
         </visual>
-        <pose>3.49 0 1.2 0 0 0</pose>
+        <pose>3.49 0 1.6 0 0 0</pose>
       </link>
     </model>
 
@@ -271,7 +271,7 @@
             </script>
           </material>
         </visual>
-        <pose>-3.49 0 1.2 0 0 0</pose>
+        <pose>-3.49 0 1.6 0 0 0</pose>
       </link>
     </model>
 
@@ -306,7 +306,7 @@
             </script>
           </material>
         </visual>
-        <pose>0 2.55 1.2 0 0 0</pose>
+        <pose>0 2.55 1.6 0 0 0</pose>
       </link>
     </model>
 
@@ -341,7 +341,7 @@
             </script>
           </material>
         </visual>
-        <pose>0 -2.55 1.2 0 0 0</pose>
+        <pose>0 -2.55 1.6 0 0 0</pose>
       </link>
     </model>
 
@@ -372,14 +372,14 @@
             </mesh>
           </geometry>
         </visual>
-        <pose>0 0 -0.42 0 0 0</pose>
+        <pose>0 0 -0.02 0 0 0</pose>
       </link>
     </model>
 
     <model name='rock_round'>
       <link name='link'>
         <static>1</static>
-        <pose>1.32307 0.270163 -0.35 0 0 0.846674</pose>
+        <pose>1.32307 0.270163 0.05 0 0 0.846674</pose>
         <visual name='rock_round'>
           <geometry>
             <mesh>
@@ -407,7 +407,7 @@
 
     <model name='rock_round_2'>
       <link name='link'>
-        <pose>0.56 -0.39 -0.35 0 0 -0.80</pose>
+        <pose>0.56 -0.39 0.05 0 0 -0.80</pose>
         <visual name='rock_round_2'>
           <geometry>
             <mesh>
@@ -436,7 +436,7 @@
     <model name='rock_round_3'>
       <link name='link'>
         <static>1</static>
-        <pose>1.25 -1.0 -0.35 0 0 2.55</pose>
+        <pose>1.25 -1.0 0.05 0 0 2.55</pose>
         <visual name='rock_round_3'>
           <geometry>
             <mesh>
@@ -478,7 +478,7 @@
             <izz>3.0</izz>
           </inertia>
         </inertial>
-        <pose>-2.01943 -0.546468 -0.35 0 0 -2.17367</pose>
+        <pose>-2.01943 -0.546468 0.05 0 0 -2.17367</pose>
         <visual name='rock_rough'>
           <geometry>
             <mesh>
@@ -520,7 +520,7 @@
       <link name='link'>
         <self_collide>1</self_collide>
         <static>1</static>
-        <pose>0.93 -1.84 -0.35 0 0 -0.62</pose>
+        <pose>0.93 -1.84 0.05 0 0 -0.62</pose>
         <visual name='rock_rough_2'>
           <geometry>
             <mesh>
