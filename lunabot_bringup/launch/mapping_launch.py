@@ -24,8 +24,8 @@ def generate_launch_description():
         launch_arguments={
             "args": LaunchConfiguration("rtabmap_args"),
             "namespace": "",
-            "rviz": "true",
-            "rtabmap_viz": "true",
+            "rviz": "false",
+            "rtabmap_viz": "false",
             "frame_id": "base_link",
             "odom_frame_id": "odom",
             "map_frame_id": "map",
