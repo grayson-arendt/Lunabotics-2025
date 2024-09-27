@@ -96,7 +96,7 @@ ros2 launch lunabot_bringup simulation_launch.py control_mode:=keyboard #control
 
 ### Configure Device Permissions
 
-The rplidar_ros package needs to access /dev/ttyUSB0 and /dev/ttyUSB1 (using both lidars). While you can run `sudo chmod +x 777 /dev/ttyUSB0` for example, it would need to be ran each time on startup.
+The rplidar_ros package needs to access /dev/ttyUSB0 and /dev/ttyUSB1 (using both lidars). While you can run `sudo chmod +x /dev/ttyUSB0` for example, it would need to be ran each time on startup.
 
 #### 1. Add user to dialout group then restart the computer
 
