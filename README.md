@@ -29,6 +29,8 @@ This repository contains the software developed by the College of DuPage team fo
 - ros2_control
 - ros2_controllers
 - gazebo_ros2_control
+- gazebo_ros_pkgs
+- rviz2
 - xacro
 
 ## Installation
