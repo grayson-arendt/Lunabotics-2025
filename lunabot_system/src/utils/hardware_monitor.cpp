@@ -18,10 +18,10 @@ public:
    * @brief Constructor for HardwareMonitor.
    */
   HardwareMonitor() : Node("hardware_monitor") {
-    d455_subscriber_ = this->create_subscription<sensor_msgs::msg::Image>(
-        "d455/color/image_raw", rclcpp::QoS(10).reliable(),
+    d456_subscriber_ = this->create_subscription<sensor_msgs::msg::Image>(
+        "d456/color/image_raw", rclcpp::QoS(10).reliable(),
         [this](const sensor_msgs::msg::Image::SharedPtr) {
-          this->resetTimer(d455_timer_, d455_valid);
+          this->resetTimer(d456_timer_, d456_valid);
         });
 
     lidar1_subscriber_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
@@ -36,8 +36,8 @@ public:
           this->resetTimer(lidar2_timer_, lidar2_valid);
         });
 
-    d455_timer_ = create_wall_timer(std::chrono::seconds(5), [this]() {
-      this->checkConnection(d455_timer_, d455_valid, "D455");
+    d456_timer_ = create_wall_timer(std::chrono::seconds(5), [this]() {
+      this->checkConnection(d456_timer_, d456_valid, "D456");
     });
 
     lidar1_timer_ = create_wall_timer(std::chrono::seconds(5), [this]() {
@@ -49,14 +49,14 @@ public:
     });
 
     all_sensors_timer_ = create_wall_timer(std::chrono::seconds(1), [this]() {
-      if (d455_valid && lidar1_valid && lidar2_valid) {
+      if (d456_valid && lidar1_valid && lidar2_valid) {
         RCLCPP_INFO(
             get_logger(),
             "\033[38;5;208mSENSOR STATUS:\033[0m \033[1;32m\033[1mGOOD\033[0m");
       }
     });
 
-    d455_valid = false;
+    d456_valid = false;
     lidar1_valid = false;
     lidar2_valid = false;
   }
@@ -90,13 +90,13 @@ public:
   }
 
 private:
-  rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr d455_subscriber_;
+  rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr d456_subscriber_;
   rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr
       lidar1_subscriber_,
       lidar2_subscriber_;
-  rclcpp::TimerBase::SharedPtr d455_timer_, lidar1_timer_, lidar2_timer_,
+  rclcpp::TimerBase::SharedPtr d456_timer_, lidar1_timer_, lidar2_timer_,
       all_sensors_timer_;
-  bool d455_valid, lidar1_valid, lidar2_valid;
+  bool d456_valid, lidar1_valid, lidar2_valid;
 };
 
 /**
