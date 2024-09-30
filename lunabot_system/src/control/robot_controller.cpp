@@ -1,8 +1,9 @@
 /**
  * @file robot_controller.cpp
- * @author Grayson Arendt
- * @date 9/18/2024
+ * @author Grayson Arendt, updated by Ibrahim Tayeb
+ * @date 9/29/2024
  */
+
 
 #include <chrono>
 #include <iomanip>
@@ -14,28 +15,26 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/joy.hpp"
 
-#include "SparkFlex.hpp"
 #include "SparkMax.hpp"
 
-/**
- * @class RobotController
- * @brief A class for controlling the robot using a controller (XBox One, PS4,
- * or Nintendo Switch) and autonomous commands.
- * @details
- * The Nintendo Switch controller triggers act as buttons instead of providing
- * variable input, so the mode will drive the robot based off of the left
- * joystick axes instead.
- * @author Grayson Arendt
- */
+// Phoenix 6 headers
+#include "ctre/phoenix6/TalonFX.hpp"
+#include "ctre/phoenix6/unmanaged/Unmanaged.hpp"
+#include "ctre/phoenix6/configs/MotorOutputConfigs.hpp"
+
+namespace phoenix6 = ctre::phoenix6;
+using namespace phoenix6::hardware;
+
 class RobotController : public rclcpp::Node {
 public:
   RobotController()
       : Node("motor_controller"), manual_enabled_(true), robot_disabled_(false),
-        left_wheel_motor_("can0", 1), right_wheel_motor_("can0", 2),
+        left_wheel_motor_(1, "can0"), right_wheel_motor_(2, "can0"),
         lift_actuator_left_motor_("can0", 3),
         lift_actuator_right_motor_("can0", 4),
         tilt_actuator_left_motor_("can0", 5),
         tilt_actuator_right_motor_("can0", 6) {
+
     // Subscriptions
     velocity_subscriber_ = create_subscription<geometry_msgs::msg::Twist>(
         "cmd_vel", 10,
@@ -50,16 +49,14 @@ public:
     declare_and_get_parameters();
     apply_controller_mode();
 
-    right_wheel_motor_.SetInverted(true);
+    // Configure Talon FX motor settings
+    configure_talon_fx_motors();
+
     RCLCPP_INFO(get_logger(),
                 "\033[0;33mMANUAL CONTROL:\033[0m \033[1;32mENABLED\033[0m");
   }
 
 private:
-  /**
-   * @brief Declares and retrieves parameters from the parameter server. Default
-   * to Xbox controller.
-   */
   void declare_and_get_parameters() {
     declare_parameter("xbox_mode", true);
     declare_parameter("ps4_mode", false);
@@ -72,9 +69,6 @@ private:
     get_parameter("outdoor_mode", outdoor_mode_);
   }
 
-  /**
-   * @brief Applies the controller mode based on the parameters.
-   */
   void apply_controller_mode() {
     if (xbox_mode_)
       RCLCPP_INFO(get_logger(), "\033[0;35mXBOX MODE\033[0m");
@@ -87,15 +81,20 @@ private:
                    "NO CONTROLLER SELECTED, CHECK LAUNCH PARAMETERS");
   }
 
-  /**
-   * @brief Sets motor speeds and controls robot based on joystick input.
-   */
+  void configure_talon_fx_motors() {
+    phoenix6::configs::MotorOutputConfigs motorConfigs{};
+
+    // Invert the right wheel motor to match the robot's design
+    motorConfigs.Inverted = phoenix6::signals::InvertedValue::CounterClockwise_Positive;
+    right_wheel_motor_.GetConfigurator().Apply(motorConfigs);
+
+    RCLCPP_INFO(get_logger(), "Talon FX motors configured.");
+  }
+
   void control_robot() {
-    // Disable the robot if home button is pressed
     if (home_button_)
       robot_disabled_ = true;
 
-    // Set dozer lift and tilt actuator speeds
     lift_actuator_speed_ = (d_pad_vertical_ == 1.0)    ? -0.3
                            : (d_pad_vertical_ == -1.0) ? 0.3
                                                        : 0.0;
@@ -106,7 +105,6 @@ private:
     speed_multiplier_ =
         (x_button_ && y_button_) ? 0.3 : (x_button_ ? 0.1 : 0.6);
 
-    // Handle driving logic based on controller type
     if (switch_mode_) {
       left_speed_ = left_joystick_y_ - left_joystick_x_;
       right_speed_ = left_joystick_y_ + left_joystick_x_;
@@ -126,18 +124,17 @@ private:
       }
     }
 
-    // Set motor output speeds
-    left_wheel_motor_.SetDutyCycle(left_speed_ * speed_multiplier_);
-    right_wheel_motor_.SetDutyCycle(right_speed_ * speed_multiplier_);
+    if (!robot_disabled_) {
+      left_wheel_motor_.Set(phoenix6::signals::DutyCycle(left_speed_ * speed_multiplier_));
+      right_wheel_motor_.Set(phoenix6::signals::DutyCycle(right_speed_ * speed_multiplier_));
+    }
+
     lift_actuator_left_motor_.SetDutyCycle(lift_actuator_speed_);
     lift_actuator_right_motor_.SetDutyCycle(lift_actuator_speed_);
     tilt_actuator_left_motor_.SetDutyCycle(tilt_actuator_speed_);
     tilt_actuator_right_motor_.SetDutyCycle(tilt_actuator_speed_);
   }
 
-  /**
-   * @brief Processes joystick input.
-   */
   void joy_callback(const sensor_msgs::msg::Joy::SharedPtr joy_msg) {
     auto clock = rclcpp::Clock();
 
@@ -154,7 +151,6 @@ private:
     d_pad_horizontal_ = get_axis(joy_msg, {4, 6, 6});
     d_pad_vertical_ = get_axis(joy_msg, {5, 7, 7});
 
-    // Enable or disable manual control
     if (share_button_) {
       manual_enabled_ = true;
       RCLCPP_INFO_THROTTLE(
@@ -169,7 +165,6 @@ private:
           "\033[0;36mAUTONOMOUS CONTROL: \033[0m\033[1;32mENABLED\033[0m");
     }
 
-    // Driving the robot with controller
     if (manual_enabled_) {
       left_joystick_x_ = joy_msg->axes[0];
       left_joystick_y_ = joy_msg->axes[1];
@@ -177,23 +172,13 @@ private:
       left_trigger_ = joy_msg->axes[2];
       right_trigger_ = joy_msg->axes[5];
 
-      // Enable motor control
-      if (robot_disabled_) {
-        RCLCPP_ERROR(get_logger(), "\033[0;31mROBOT DISABLED\033[0m");
-      } else {
-        SparkFlex::Heartbeat();
-      }
+      SparkFlex::Heartbeat();
 
-      // Sets motor speeds to drive robot and run accessories
       control_robot();
     }
   }
 
-  /**
-   * @brief Callback for velocity messages.
-   */
-  void
-  velocity_callback(const geometry_msgs::msg::Twist::SharedPtr velocity_msg) {
+  void velocity_callback(const geometry_msgs::msg::Twist::SharedPtr velocity_msg) {
     if (!manual_enabled_ && navigation_enabled_) {
       SparkFlex::Heartbeat();
       double linear_velocity = velocity_msg->linear.x;
@@ -208,59 +193,47 @@ private:
           0.1 * (linear_velocity + angular_velocity * wheel_distance / 2.0) /
           wheel_radius;
 
-      left_wheel_motor_.SetDutyCycle(velocity_left_cmd);
-      right_wheel_motor_.SetDutyCycle(velocity_right_cmd);
+      left_wheel_motor_.Set(phoenix6::signals::DutyCycle(velocity_left_cmd));
+      right_wheel_motor_.Set(phoenix6::signals::DutyCycle(velocity_right_cmd));
     }
   }
 
-  /**
-   * @brief Retrieves button value based on the current controller mode.
-   */
   int get_button(const sensor_msgs::msg::Joy::SharedPtr &joy_msg,
                  const std::initializer_list<int> &mappings) {
     size_t index = xbox_mode_ ? 2 : ps4_mode_ ? 1 : 0;
     return joy_msg->buttons[*(mappings.begin() + index)];
   }
 
-  /**
-   * @brief Retrieves axis value based on the current controller mode.
-   */
   double get_axis(const sensor_msgs::msg::Joy::SharedPtr &joy_msg,
                   const std::initializer_list<int> &mappings) {
     size_t index = xbox_mode_ ? 2 : ps4_mode_ ? 1 : 0;
     return joy_msg->axes[*(mappings.begin() + index)];
   }
 
-  // Subscriptions
-  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr
-      velocity_subscriber_;
+  // Member variables
+  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr velocity_subscriber_;
   rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joystick_subscriber_;
 
-  // Robot states, controller modes, and motor speeds
-  bool manual_enabled_, navigation_enabled_, robot_disabled_;
+  bool manual_enabled_;
+  bool robot_disabled_;
   bool xbox_mode_, ps4_mode_, switch_mode_, outdoor_mode_;
-  double speed_multiplier_, left_speed_, right_speed_, lift_actuator_speed_,
-      tilt_actuator_speed_;
+  bool share_button_, menu_button_, home_button_, a_button_, b_button_, x_button_, y_button_;
+  bool left_bumper_, right_bumper_;
+  double left_speed_, right_speed_, left_joystick_x_, left_joystick_y_, right_joystick_y_;
+  double d_pad_horizontal_, d_pad_vertical_;
+  double lift_actuator_speed_, tilt_actuator_speed_;
+  double left_trigger_, right_trigger_;
+  double speed_multiplier_;
 
-  // Controller states and values
-  bool home_button_, share_button_, menu_button_, a_button_, b_button_,
-      x_button_, y_button_;
-  double left_trigger_, right_trigger_, left_bumper_, right_bumper_,
-      d_pad_vertical_, d_pad_horizontal_, left_joystick_x_, left_joystick_y_,
-      right_joystick_y_;
-
-  // Motors
-  SparkFlex left_wheel_motor_;
-  SparkFlex right_wheel_motor_;
+  // Motor objects
+  TalonFX left_wheel_motor_;
+  TalonFX right_wheel_motor_;
   SparkMax lift_actuator_left_motor_;
   SparkMax lift_actuator_right_motor_;
   SparkMax tilt_actuator_left_motor_;
   SparkMax tilt_actuator_right_motor_;
 };
 
-/**
- * @brief Main function initializes and spins the RobotController node.
- */
 int main(int argc, char **argv) {
   rclcpp::init(argc, argv);
   auto node = std::make_shared<RobotController>();

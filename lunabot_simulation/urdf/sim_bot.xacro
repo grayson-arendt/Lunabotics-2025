@@ -358,7 +358,7 @@
   <joint name="base_d456_joint" type="fixed">
     <parent link="base_link" />
     <child link="d456_link" />
-    <origin xyz="0.1602565 0 0.8" rpy="0 0 0" />
+    <origin xyz="0.1602565 0 0.6" rpy="0 0 0" />
   </joint>
 
   <joint name="d456_optical_joint" type="fixed">
