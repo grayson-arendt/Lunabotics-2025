@@ -34,10 +34,10 @@ class RobotController : public rclcpp::Node
 {
 public:
     RobotController()
-        : Node("motor_controller"), manual_enabled_(true), robot_disabled_(false),
-          left_wheel_motor_("can0", 1), right_wheel_motor_("can0", 2),
+        : Node("motor_controller"), manual_enabled_(true), robot_disabled_(false)
+          /*left_wheel_motor_("can0", 1), right_wheel_motor_("can0", 2),
           lift_actuator_left_motor_("can0", 3), lift_actuator_right_motor_("can0", 4),
-          tilt_actuator_left_motor_("can0", 5), tilt_actuator_right_motor_("can0", 6)
+          tilt_actuator_left_motor_("can0", 5), tilt_actuator_right_motor_("can0", 6)*/
     {
         velocity_subscriber_ = create_subscription<geometry_msgs::msg::Twist>(
             "cmd_vel", 10, std::bind(&RobotController::velocity_callback, this, std::placeholders::_1));
