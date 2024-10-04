@@ -91,7 +91,7 @@ ros2 launch lunabot_bringup simulation_launch.py # teleop_mode:=xbox (for XBox c
 ```
 
 <p align="center">
-  <img src="sample.png">
+  <img src="demo.png">
 </p>
 
 ## Running the Physical Robot
