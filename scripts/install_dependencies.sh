@@ -17,10 +17,6 @@ install_sparkcan() {
     sudo apt install sparkcan -y
 }
 
-install_phoenix() {
-    cd ..
-    mv phoenix /usr/lib/
-}
 
 install_sensors() {
     sudo apt install ros-humble-realsense2-*
@@ -28,10 +24,9 @@ install_sensors() {
 }
 
 main() {
-    install_dependencies
     install_sparkcan
     install_sensors
-    install_phoenix
+    install_dependencies
 }
 
 main
