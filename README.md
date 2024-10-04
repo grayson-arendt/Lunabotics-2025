@@ -100,15 +100,15 @@ ros2 launch lunabot_bringup simulation_launch.py # teleop_mode:=xbox (for XBox c
 
 ### SSH Into Robot Computer
 
-SSH (Secure Shell) allows you access the a computer over the network and run commands. The host computer is the computer that you are personally interfacing with, such as laptop. For any future steps that require being ran on the robot computer, you will need to have an SSH connection with it.
+SSH (Secure Shell) allows you access the a computer over the network and run commands. The host computer is the computer that you are personally interfacing with, such as laptop. For any future steps that require being ran on the robot computer, you will need to be connected via SSH.
 
-#### 1. Create SSH-key (on host computer)
+#### 1. Create SSH-key (host computer)
 
 ```bash
 ssh-keygen
 ```
 
-#### 2. Get username and IP address (on robot computer)
+#### 2. Get username and IP address (robot computer)
 
 ```bash
 whoami
@@ -120,7 +120,7 @@ Next, get the IP address:
 hostname -I
 ```
 
-#### 3. Establish SSH connection
+#### 3. Establish SSH connection (host computer)
 
 Using the username and IP address from the previous step, now you can connect to the robot computer. It may look something like this for example:
 
@@ -131,9 +131,7 @@ ssh asrock@192.168.10.1 # (General format: username@ip_address)
 
 ### Configure Device Permissions 
 
-Run the next steps on the robot computer.
-
-#### 1. Add user to dialout group then restart computer
+#### 1. Add user to dialout group then restart (robot computer)
 
 ```bash
 sudo usermod -a -G dialout $USER
@@ -141,7 +139,7 @@ sudo usermod -a -G dialout $USER
 
 Use `ls /dev/ttyUSB*` to identify device numbers if the lidars are disconnected and reconnected, then adjust the lidar `"serial_port"` parameters in `real_launch.py` accordingly.
 
-#### 2. Setup camera udev rules
+#### 2. Setup camera udev rules (robot computer)
 
 ```bash
 cd ~/lunabot_ws/src/Lunabotics-2025/scripts
@@ -153,7 +151,7 @@ Make sure all cameras are unplugged while setting up the udev rules.
 
 ### Running Launch Files
 
-#### 1. Initialize SocketCAN
+#### 1. Initialize SocketCAN (robot computer)
 
 ```bash
 cd ~/lunabot_ws/src/Lunabotics-2025/scripts/
@@ -161,7 +159,7 @@ chmod +x canable_start.sh
 ./canable_start.sh
 ```
 
-#### 2. Source workspace setup
+#### 2. Source workspace setup (both host and robot computer)
 
 ```bash
 cd ~/lunabot_ws
@@ -170,13 +168,13 @@ source install/setup.bash
 
 #### Open separate terminal windows and source the workspace setup for each next step:
 
-#### 3. Visualize with RViz2 (on host computer)
+#### 3. Visualize with RViz2 (host computer)
 
 ```bash
 ros2 launch lunabot_bringup visualization_launch.py
 ```
 
-#### 4. Launch the real robot (via SSH on robot computer)
+#### 4. Launch the real robot (robot computer)
 
 ```bash
 ros2 launch lunabot_bringup real_launch.py # robot_mode:=autonomous (to run in autonomous mode)
