@@ -10,14 +10,17 @@
 #include <sensor_msgs/msg/joy.hpp>
 
 /**
+ * @class BladeJointController
  * @brief Controls the blade joint pitch angle using joystick input.
  */
-class BladeJointController : public rclcpp::Node {
+class BladeJointController : public rclcpp::Node
+{
 public:
   /**
    * @brief Constructor for BladeJointController.
    */
-  BladeJointController() : Node("blade_joint_controller"), pitch_angle_(0.0) {
+  BladeJointController() : Node("blade_joint_controller"), pitch_angle_(0.0)
+  {
     joy_subscriber_ = this->create_subscription<sensor_msgs::msg::Joy>(
         "joy", 10,
         std::bind(&BladeJointController::joy_callback, this,
@@ -36,7 +39,8 @@ private:
    * commands.
    * @param msg The joystick input message.
    */
-  void joy_callback(const sensor_msgs::msg::Joy::SharedPtr msg) {
+  void joy_callback(const sensor_msgs::msg::Joy::SharedPtr msg)
+  {
     float y_axis_value = msg->axes[4];
     float scaling_factor = 0.025;
 
@@ -53,16 +57,15 @@ private:
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr
       joint_publisher_;
 
-  float pitch_angle_;
-  float max_pitch_angle_;
-  float min_pitch_angle_;
+  float pitch_angle_, max_pitch_angle_, min_pitch_angle_;
 };
 
 /**
- * @brief Main function that initializes and spins the BladeJointController
- * node.
+ * @brief Main function.
+ * Initializes and spins the BladeJointController node.
  */
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
   rclcpp::init(argc, argv);
   auto node = std::make_shared<BladeJointController>();
   rclcpp::spin(node);

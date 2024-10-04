@@ -13,8 +13,6 @@
   <depend>gazebo_ros</depend>
   <depend>robot_localization</depend>
   <depend>navigation2</depend>
-  <depend>rtabmap_ros</depend>
-  <depend>rplidar_ros</depend>
   <depend>apriltag_ros</depend>
   <depend>laser_filters</depend>
   <depend>imu_complementary_filter</depend>

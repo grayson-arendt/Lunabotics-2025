@@ -1,0 +1,9 @@
+---
+bool success
+float64 x
+float64 y
+float64 yaw
+string message
+---
+float64 alignment_progress
+string feedback_message

@@ -1,0 +1,16 @@
+material rock_rough
+{
+  technique
+  {
+    pass
+    {
+      texture_unit
+      {
+        texture regolith.jpg
+        filtering none none none
+        scale 1.0 1.0
+      }
+    }
+  }
+}
+

@@ -84,7 +84,7 @@ def main():
     spinner.start()
 
     speed = 0.35
-    turn = 0.45
+    turn = 0.25
     blade_position = 0.0
     max_blade_position = 0.75
     min_blade_position = -0.75

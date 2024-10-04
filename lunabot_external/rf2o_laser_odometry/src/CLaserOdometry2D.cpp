@@ -7,22 +7,22 @@
 *  For more information, please refer to:
 *
 *  Planar Odometry from a Radial Laser Scanner. A Range Flow-based Approach. ICRA'16.
-*  Available at: http://mapir.uma.es/papersrepo/2016/2016_Jaimez_ICRA_RF2O.pdf
+*  Available at: http://mapir.isa.uma.es/mapirwebsite/index.php/mapir-downloads/papers/217
 *
 * Maintainer: Javier G. Monroy
-* MAPIR group: https://mapir.isa.uma.es
+* MAPIR group: http://mapir.isa.uma.es/
 *
-* Modifications: Jeremie Deray & (see contributons on github)
+* Modifications: Jeremie Deray
 ******************************************************************************************** */
 
-#include "rf2o_laser_odometry/CLaserOdometry2D.hpp"
+#include "rf2o_laser_odometry/CLaserOdometry2D.h"
 
 namespace rf2o {
 
+// --------------------------------------------
+// CLaserOdometry2D
+//---------------------------------------------
 
-/**
- * Constructor that inherits from Node
-*/
 CLaserOdometry2D::CLaserOdometry2D() :
   Node("CLaserOdometry2D"),
   verbose(false),
@@ -39,66 +39,58 @@ CLaserOdometry2D::CLaserOdometry2D() :
   
 }
 
-
-/**
- * Sets the laser pose with respect the robot base_link, and its inverse
- * @param laser_pose is the transform between laser_frame_id and base_link
-*/
 void CLaserOdometry2D::setLaserPose(const Pose3d& laser_pose)
 {
+  //Set laser pose on the robot
+
   laser_pose_on_robot_     = laser_pose;
   laser_pose_on_robot_inv_ = laser_pose_on_robot_.inverse();
 }
-
 
 bool CLaserOdometry2D::is_initialized()
 {
   return module_initialized;
 }
 
-
-/**
- * On the first laser scan, gets its parameters and initialize the node
- * 
-*/
 void CLaserOdometry2D::init(const sensor_msgs::msg::LaserScan& scan,
                             const geometry_msgs::msg::Pose& initial_robot_pose)
 {
-  // Obtain laser parametes
-  RCLCPP_INFO(get_logger(), "Got first Laser Scan .... Configuring node");
-  width = scan.ranges.size();         // Num of samples (size) of the scan laser
-  cols = width;						            // Max resolution. Should be similar to the width parameter
-  fovh = std::abs(scan.angle_max - scan.angle_min);  // Horizontal Laser's FOV
-  ctf_levels = 5;                     // Coarse-to-Fine levels
-  iter_irls  = 5;                     // Num iterations to solve iterative reweighted least squares
+  //Got an initial scan laser, obtain its parametes
+  RCLCPP_INFO(get_logger(), "[rf2o] Got first Laser Scan .... Configuring node");
 
-  // Set the robot initial pose in the "map" frame_id
-  // Odometry estimation will carry out from this initial pose
+  width = scan.ranges.size();    // Num of samples (size) of the scan laser
+
+  cols = width;						// Max resolution. Should be similar to the width parameter
+  fovh = std::abs(scan.angle_max - scan.angle_min); // Horizontal Laser's FOV
+  ctf_levels = 5;                     // Coarse-to-Fine levels
+  iter_irls  = 5;                      //Num iterations to solve iterative reweighted least squares
+
   Pose3d robot_initial_pose = Pose3d::Identity();
+
   robot_initial_pose = Eigen::Quaterniond(initial_robot_pose.orientation.w,
                                           initial_robot_pose.orientation.x,
                                           initial_robot_pose.orientation.y,
                                           initial_robot_pose.orientation.z);
+
   robot_initial_pose.translation()(0) = initial_robot_pose.position.x;
   robot_initial_pose.translation()(1) = initial_robot_pose.position.y;
 
   //RCLCPP_INFO_STREAM(get_logger(), "[rf2o] Setting origin at:\n"<< robot_initial_pose.matrix());
 
-  // Get the initial laser pose assuming laser is fixed with respect the base_link
+  //Set the initial pose
   laser_pose_    = robot_initial_pose * laser_pose_on_robot_;
   laser_oldpose_ = laser_oldpose_;
 
-
-  // Init rf2o module (internal)
-  //-----------------------------
+  // Init module (internal)
+  //------------------------
   range_wf = Eigen::MatrixXf::Constant(1, width, 1);
 
-  // Resize vectors according to coarse2fine levels
+  //Resize vectors according to levels
   transformations.resize(ctf_levels);
   for (unsigned int i = 0; i < ctf_levels; i++)
     transformations[i].resize(3, 3);
 
-  // Resize pyramid
+  //Resize pyramid
   unsigned int s, cols_i;
   const unsigned int pyr_levels = std::round(std::log2(round(float(width) / float(cols)))) + ctf_levels;
   range.resize(pyr_levels);
@@ -164,70 +156,56 @@ void CLaserOdometry2D::init(const sensor_msgs::msg::LaserScan& scan,
   kai_loc_old_ = MatrixS31::Zero();
 
   module_initialized = true;
-  last_odom_time = scan.header.stamp;   // the time of this first scan
+  last_odom_time = scan.header.stamp;
 }
-
 
 const Pose3d& CLaserOdometry2D::getIncrement() const
 {
   return last_increment_;
 }
 
-
 const Eigen::Matrix<float, 3, 3>& CLaserOdometry2D::getIncrementCovariance() const
 {
   return cov_odo;
 }
-
 
 Pose3d& CLaserOdometry2D::getPose()
 {
   return robot_pose_;
 }
 
-
 const Pose3d& CLaserOdometry2D::getPose() const
 {
   return robot_pose_;
 }
 
-
-/**
- * Performs multilevel odometry calculation from a pair of scan lasers (previous-current)
- * Odometry estimation in ROS is cumulative, that is, it adds incrementally to update the robot "odom"
- * @param scan the last laser scan received (will be compared with the previous one stored)
-*/
 bool CLaserOdometry2D::odometryCalculation(const sensor_msgs::msg::LaserScan& scan)
 {
-  //=====================================
-  //	DIFERENTIAL  ODOMETRY  MULTILEVEL
-  //=====================================
+  //==================================================================================
+  //						DIFERENTIAL  ODOMETRY  MULTILEVEL
+  //==================================================================================
 
-  // copy @param scan to internal variable (we already did it for the previous scan)
+  //copy laser scan to internal variable
   range_wf = Eigen::Map<const Eigen::MatrixXf>(scan.ranges.data(), width, 1);
 
-  // Keep record of times
   auto start = get_clock()->now();
 
-  // Create pyramid from current scan
   createImagePyramid();
 
-  // Coarse-to-fine scheme (pyramid lvls)
+  //Coarse-to-fine scheme
   for (unsigned int i=0; i<ctf_levels; i++)
   {
-    // Clear previous computations
+    //Previous computations
     transformations[i].setIdentity();
 
-    // Keep record of current level (for other methods)
     level = i;
     unsigned int s = std::pow(2.f,int(ctf_levels-(i+1)));
     cols_i = std::ceil(float(cols)/float(s));
     image_level = ctf_levels - i + std::round(std::log2(std::round(float(width)/float(cols)))) - 1;
 
-    // 1. Perform warping
+    //1. Perform warping
     if (i == 0)
     {
-      // No need for the first lvl
       range_warped[image_level] = range[image_level];
       xx_warped[image_level]    = xx[image_level];
       yy_warped[image_level]    = yy[image_level];
@@ -235,22 +213,22 @@ bool CLaserOdometry2D::odometryCalculation(const sensor_msgs::msg::LaserScan& sc
     else
       performWarping();
 
-    // 2. Calculate inter coords
+    //2. Calculate inter coords
     calculateCoord();
 
-    // 3. Find null points
+    //3. Find null points
     findNullPoints();
 
-    // 4. Compute derivatives
+    //4. Compute derivatives
     calculaterangeDerivativesSurface();
 
-    // 5. Compute normals
+    //5. Compute normals
     //computeNormals();
 
-    // 6. Compute weights
+    //6. Compute weights
     computeWeights();
 
-    // 7. Solve odometry
+    //7. Solve odometry
     if (num_valid_range > 3)
     {
       solveSystemNonLinear();
@@ -267,38 +245,36 @@ bool CLaserOdometry2D::odometryCalculation(const sensor_msgs::msg::LaserScan& sc
       continue;
     }
 
-    // 8. Filter solution
+    //8. Filter solution
     if (!filterLevelSolution()) return false;
-  } // end pyramid lvls
+  }
 
-  // Get computation time 
   auto m_runtime = get_clock()->now() - start;
-  RCLCPP_INFO(get_logger(), "execution time (ms): %f",
+
+  RCLCPP_INFO(get_logger(), "[rf2o] execution time (ms): %f",
                 m_runtime.seconds()*double(1000));
 
-  // Update poses with the new odom
+  //Update poses
   PoseUpdate();
 
   return true;
 }
 
-
-/**
- * Creates the Pyramid (multi-resolution) from the current laser range data
-*/
 void CLaserOdometry2D::createImagePyramid()
 {
-  // Push the scans back
+  const float max_range_dif = 0.3f;
+
+  //Push the frames back
   range_old.swap(range);
   xx_old.swap(xx);
   yy_old.swap(yy);
 
-  // The number of levels of the pyramid does not always match the number of levels used
-  // in the odometry computation (because we sometimes want to finish with lower resolutions)
+  //The number of levels of the pyramid does not match the number of levels used
+  //in the odometry computation (because we sometimes want to finish with lower resolutions)
+
   unsigned int pyr_levels = std::round(std::log2(std::round(float(width)/float(cols)))) + ctf_levels;
 
-  // Generate Pyramid levels
-  const float max_range_dif = 0.3f;
+  //Generate levels
   for (unsigned int i = 0; i<pyr_levels; i++)
   {
     unsigned int s = std::pow(2.f,int(i));
@@ -306,14 +282,14 @@ void CLaserOdometry2D::createImagePyramid()
 
     const unsigned int i_1 = i-1;
 
-    // First level -> Filter (not downsampling);
+    //First level -> Filter (not downsampling);
     if (i == 0)
     {
       for (unsigned int u = 0; u < cols_i; u++)
       {
         const float dcenter = range_wf(u);
 
-        // Inner pixels (avoid first and last points in the scan)
+        //Inner pixels
         if ((u>1)&&(u<cols_i-2))
         {
           if (std::isfinite(dcenter) && dcenter > 0.f)
@@ -337,7 +313,7 @@ void CLaserOdometry2D::createImagePyramid()
             range[i](u) = 0.f;
         }
 
-        // Boundary points 
+        //Boundary
         else
         {
           if (std::isfinite(dcenter) && dcenter > 0.f)
@@ -367,7 +343,8 @@ void CLaserOdometry2D::createImagePyramid()
       }
     }
 
-    // Second level and forth ->  Downsampling    
+    //                              Downsampling
+    //-----------------------------------------------------------------------------
     else
     {
       for (unsigned int u = 0; u < cols_i; u++)
@@ -375,7 +352,7 @@ void CLaserOdometry2D::createImagePyramid()
         const int u2 = 2*u;
         const float dcenter = range[i_1](u2);
 
-        // Inner pixels (avoid first/last point in the scan)
+        //Inner pixels
         if ((u>0)&&(u<cols_i-1))
         {
           if (dcenter > 0.f)
@@ -433,7 +410,7 @@ void CLaserOdometry2D::createImagePyramid()
       }
     }
 
-    // Calculate coordinates "xy" of the points
+    //Calculate coordinates "xy" of the points
     for (unsigned int u = 0; u < cols_i; u++)
     {
       if (range[i](u) > 0.f)
@@ -450,7 +427,6 @@ void CLaserOdometry2D::createImagePyramid()
     }
   }
 }
-
 
 void CLaserOdometry2D::calculateCoord()
 {
@@ -470,7 +446,6 @@ void CLaserOdometry2D::calculateCoord()
     }
   }
 }
-
 
 void CLaserOdometry2D::calculaterangeDerivativesSurface()
 {
@@ -754,9 +729,6 @@ void CLaserOdometry2D::Reset(const Pose3d& ini_pose/*, CObservation2DRangeScan s
   createImagePyramid();
 }
 
-/**
- * Performs warping on the scan points of the current pyramid lvl(coarse2fine)
-*/
 void CLaserOdometry2D::performWarping()
 {
   Eigen::Matrix3f acu_trans;
@@ -796,8 +768,9 @@ void CLaserOdometry2D::performWarping()
         //Very close pixel
         if (std::abs(std::round(uwarp) - uwarp) < 0.05f)
         {
-          range_warped[image_level]((int)round(uwarp)) += range_w;
-          wacu((int)std::round(uwarp)) += 1.f;
+          int index = (int) std::round(uwarp);
+          range_warped[image_level](index) += range_w;
+          wacu(index) += 1.f;
         }
         else
         {
@@ -839,7 +812,7 @@ bool CLaserOdometry2D::filterLevelSolution()
   Eigen::SelfAdjointEigenSolver<Eigen::MatrixXf> eigensolver(cov_odo);
   if (eigensolver.info() != Eigen::Success)
   {
-    RCLCPP_WARN(get_logger(), "WARNING: Eigensolver couldn't find a solution. Pose is not updated");
+    RCLCPP_WARN(get_logger(), "[rf2o] ERROR: Eigensolver couldn't find a solution. Pose is not updated");
     return false;
   }
 
@@ -909,14 +882,10 @@ bool CLaserOdometry2D::filterLevelSolution()
   return true;
 }
 
-
-/**
- * Updates the laser and robot poses after analyzing the last scan
- * To do so, we need to analyze the coarse2fine pyramid
-*/
 void CLaserOdometry2D::PoseUpdate()
 {
-  // First, compute the overall transformation
+  //  First, compute the overall transformation
+  //---------------------------------------------------
   Eigen::Matrix3f acu_trans;
   acu_trans.setIdentity();
 
@@ -966,15 +935,15 @@ void CLaserOdometry2D::PoseUpdate()
   kai_loc_old_(1) = -kai_abs_(0)*std::sin(phi) + kai_abs_(1)*std::cos(phi);
   kai_loc_old_(2) =  kai_abs_(2);
 
-  RCLCPP_INFO(get_logger(), "Laser odom [x,y,yaw]=[%f %f %f]",
+  RCLCPP_INFO(get_logger(), "[rf2o] LASERodom = [%f %f %f]",
                 laser_pose_.translation()(0),
                 laser_pose_.translation()(1),
                 rf2o::getYaw(laser_pose_.rotation()));
 
-  // Compose Transformations (robot odom)
+  //Compose Transformations
   robot_pose_ = laser_pose_ * laser_pose_on_robot_inv_;
 
-  RCLCPP_INFO(get_logger(), "Robot-base odom [x,y,yaw]=[%f %f %f]",
+  RCLCPP_INFO(get_logger(), "BASEodom = [%f %f %f]",
                 robot_pose_.translation()(0),
                 robot_pose_.translation()(1),
                 rf2o::getYaw(robot_pose_.rotation()));
