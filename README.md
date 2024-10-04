@@ -6,32 +6,15 @@ This repository contains the software developed by the College of DuPage team fo
 
 - ASRock 4X4 BOX-8840U
 - RPLidar S2L
-- RPLidar A3
+- RPLidar S3
+- Intel RealSense D455 Depth Camera
 - Intel RealSense D456 Depth Camera
-- REV Robotics Neo Vortex (x4)
-- REV Robotics Spark Flex (x4)
+- REV Robotics NEO V1.1 (x2)
 - REV Robotics Spark Max (x4)
+- REV Robotics Power Distribution Hub
 - Turnigy 14.8V 8000mAh LiPo Battery
 - Turnigy 14.8V 12000mAh LiPo Battery
-- AndyMark Power Distribution Panel
-- MKS CANable Pro
-
-## Software Requirements
-
-- rtabmap
-- rtabmap_ros
-- rplidar_ros
-- apriltag_ros
-- navigation2
-- robot_localization
-- laser_filters
-- imu_complementary_filter
-- ros2_control
-- ros2_controllers
-- gazebo_ros2_control
-- gazebo_ros_pkgs
-- rviz2
-- xacro
+- ODrive USB-CAN Adapter
 
 ## Installation
 
@@ -63,19 +46,36 @@ Run the installation script to install the required dependencies. `chmod +x` giv
 ```bash
 cd ~/lunabot_ws/src/Lunabotics-2025/scripts
 chmod +x install_dependencies.sh
-sudo ./install_dependencies.sh
+./install_dependencies.sh
 ```
 
 #### 4. Build the workspace
 
+Building may take some time due to the rtabmap and rtabmap_ros packages in lunabot_external. This is because two cameras are being used for mapping and it needs to be built from source with the `-DRTABMAP_SYNC_MULTI_RGBD=ON` flag to allow for a multiple camera setup, as multiple cameras are not supported in the default build. To avoid building the entire workspace all over again after the initial build if you make changes, use `colcon build --packages-select name_of_package` and choose the package that you made changes to for rebuilding. You can list multiple packages after the `--packages-select` flag.
+
 ```bash
 cd ~/lunabot_ws
-colcon build
+colcon build --cmake-args -DRTABMAP_SYNC_MULTI_RGBD=ON -DWITH_OPENGV=OFF --parallel-workers 4 # Modify number as needed, this is how many packages are built concurrently
 ```
+
+#### 5. (Optional) Set MAKEFLAG and Rebuild
+If your computer keeps crashing while trying to build, `colcon build` may be trying to do too many things at once. Setting this flag to `-j4` limits each package's internal make jobs to 4 threads. You can either increase or reduce both this and `--parallel-workers`, increasing will make it build faster while decreasing will put less load on your computer but will build slower.
+
+```bash
+export MAKEFLAGS="-j4" # Modify number as needed
+```
+
+Next, rebuild using the same commands in step **4. Build the workspace**.
 
 ## Simulating the Robot
 
-Gazebo simulation can be slow depending on your computer's specifications. You can control the robot with an Xbox One controller by specifying the control mode with `control_mode:=xbox`. In this mode, the left joystick controls the drivetrain, while the right joystick’s y-axis moves the dozer blade.
+There are two modes for simulating the robot: **manual** and **autonomous**. 
+
+##### Manual Mode
+This launches a teleop node for controlling the Gazebo robot with either a keyboard or Xbox controller along with Navigation2 and RTABMap, but does not launch the `localization_server` or `navigation_client`. In this mode, you can drive the robot around, map the arena, and play around with setting Nav2 goals in RViz2.
+
+##### Autonomous Mode
+This launches `localization_server` and `navigation_client` and will not allow the user to teleop the robot. Instead, it will follow the commands in the server and client and perform a one-cycle autonomy sequence. 
 
 #### 1. Navigate to workspace and source setup
 
@@ -84,21 +84,21 @@ cd ~/lunabot_ws
 source install/setup.bash
 ```
 
-#### 2. Launch Gazebo and RViz2
+#### 2. Launch simulation
 
 ```bash
-ros2 launch lunabot_bringup simulation_launch.py control_mode:=keyboard #control_mode:=xbox
+ros2 launch lunabot_bringup simulation_launch.py # teleop_mode:=xbox (for XBox controller) robot_mode:=autonomous (to run in autonomous mode)
 ```
 
 <p align="center">
-  <img src="sample2.png">
+  <img src="sample.png">
 </p>
 
 ## Running the Physical Robot
 
 ### Configure Device Permissions
 
-The rplidar_ros package needs to access /dev/ttyUSB0 and /dev/ttyUSB1 (using both lidars). While you can run `sudo chmod +x /dev/ttyUSB0` for example, it would need to be ran each time on startup.
+The rplidar_ros package needs to access /dev/ttyUSB0 and /dev/ttyUSB1 (using both lidars). While you can run `sudo chmod 777 /dev/ttyUSB0` for example, it would need to be ran each time on startup.
 
 #### 1. Add user to dialout group then restart the computer
 
@@ -106,7 +106,7 @@ The rplidar_ros package needs to access /dev/ttyUSB0 and /dev/ttyUSB1 (using bot
 sudo usermod -a -G dialout $USER
 ```
 
-Use `ls /dev/ttyUSB*` to identify device numbers if the lidars are disconnected and reconnected, then adjust the lidar parameters in `hardware_launch.py` accordingly.
+Use `ls /dev/ttyUSB*` to identify device numbers if the lidars are disconnected and reconnected, then adjust the lidar `"serial_port"` parameters in `real_launch.py` accordingly.
 
 #### 2. Setup camera udev rules
 
@@ -140,99 +140,68 @@ source install/setup.bash
 #### 3. Visualize with RViz2 (on host computer)
 
 ```bash
-ros2 launch lunabot_bringup external_launch.py
+ros2 launch lunabot_bringup visualization_launch.py
 ```
 
-#### 4. Launch hardware
+#### 4. Launch the real robot (via SSH on robot computer)
 
 ```bash
-ros2 launch lunabot_bringup hardware_launch.py
+ros2 launch lunabot_bringup real_launch.py # robot_mode:=autonomous (to run in autonomous mode)
 ```
-
-#### 5. Start RTAB-Map for mapping
-
-```bash
-ros2 launch lunabot_bringup mapping_launch.py
-```
-
-#### 6. Start Navigation2 for navigation
-
-```bash
-ros2 launch lunabot_bringup navigation_launch.py
-```
-
-In RViz2 on the host computer, you will now be able to select a "Nav2 Goal" in the GUI and have the robot navigate to that location.
-
-#### (Optional) 7. Start navigation client
-
-```bash
-ros2 run lunabot_system navigation_client
-```
-
-The action client will send two goals, one for excavation zone and another for construction zone.
-
-<p align="center">
-  <img src="sample.png">
-</p>
 
 ## Project Structure
 
 **lunabot_bringup**: This package contains the launch files to bring up various robot components.
 - **launch**
-  - **external_launch.py**: Launches the necessary nodes for RViz2 and robot state/joint publishers. This is used on an external computer/laptop to visualize the robot and its state in real time.
-  - **hardware_launch.py**: Launches the nodes required to bring up the physical robot's hardware, including lidar sensors, depth cameras, and robot controller.
-  - **mapping_launch.py**: Launches RTAB-Map, a real-time appearance-based mapping node used for simultaneous localization and mapping (SLAM). This allows the robot to create a map of its environment while also localizing itself within that map.
-  - **navigation_launch.py**: Launches Navigation2, which provides autonomous navigation capabilities. It uses sensor data, the map, and the robot’s position to plan and execute paths to goals set by the user or an action client.
-  - **simulation_launch.py**: Launches the necessary nodes for simulating the robot in Gazebo and RViz2.
+  - **real_launch.py**: Launches the nodes required for bringing up the physical robot hardware and sensors in a real-world environment.
+  - **simulation_launch.py**: Launches the necessary nodes for simulating the robot in Gazebo.
+  - **visualization_launch.py**: Launches RViz2 to visualize the robot and its sensor data.
 
-**lunabot_config**: This package contains configuration files such as behavior trees, RViz settings, and parameters for the robot and sensors.
+**lunabot_config**: This package contains configuration files for behavior trees, RViz2 settings, and sensor parameters.
 - **behavior_trees**
-  - **navigate_to_pose_w_replanning_goal_patience_and_recovery.xml**: A behavior tree used with the Navigation2 stack to enable goal replanning, patience, and recovery behaviors.
-- **config**
-  - **robot_view.rviz**: Configuration file for RViz2, defining how the robot and its environment are displayed.
+  - **navigate_to_pose_w_replanning_goal_patience_and_recovery.xml**: A behavior tree used with Navigation2 to implement advanced navigation behaviors like goal replanning, patience, and recovery.
 - **params**
-  - **a3_lidar_params.yaml**: Parameter file containing settings for processing data from the RPLidar A3.
-  - **ekf_params.yaml**: Parameters for the Extended Kalman Filter (EKF) used by the robot localization node to fuse sensor data like IMU, lidar odometry, and wheel encoders.
-  - **nav2_params.yaml**: Configuration parameters for the Navigation2 stack.
-  - **s2_lidar_params.yaml**: Similar to `a3_lidar_params.yaml`, but for the RPLidar S2L.
-  - **sim_params.yaml**: Parameters for the ros2_control controllers that simulate the robot’s movement in Gazebo.
-  - **tag_params.yaml**: Parameters for the apriltag_ros package, which detects AprilTag fiducial markers for robot localization.
+  - **ekf_params.yaml**: Parameters for the Extended Kalman Filter (EKF) used to fuse sensor data for localization.
+  - **gazebo_params.yaml**: Configuration parameters for controllers in the Gazebo simulation.
+  - **nav2_real_params.yaml**: Parameters for configuring Navigation2 when running on the physical robot.
+  - **nav2_sim_params.yaml**: Parameters for configuring Navigation2 in simulation.
+  - **rtabmap_params.yaml**: Parameters for configuring RTAB-Map.
+  - **s2l_filter_params.yaml**: Parameters for filtering lidar data from the RPLidar S2L sensor.
+- **rviz**
+  - **robot_view.rviz**: Configuration file for RViz2 that defines how the robot and its environment are visualized.
 
 **lunabot_external**
 - **rf2o_laser_odometry**: A package used to compute laser odometry, estimating the robot’s position over time based on lidar data.
 
 **lunabot_simulation**: This package contains assets and code for simulating the robot in Gazebo.
 - **meshes**: Contains the 3D models used to visualize the robot in Gazebo and RViz2.
-  - **base_link.stl**: Mesh for the robot's base frame.
-  - **blade_link.stl**: Mesh for the robot's bulldozer blade.
-  - **camera_link.stl**: Mesh for the camera.
-  - **ebox_link.stl**: Mesh for the electronics box containing the onboard computer and other electronics.
-  - **lidar1_link.stl**: Mesh for the RPLidar A3 mount.
-  - **lidar2_link.stl**: Mesh for the RPLidar S2 mount.
-  - **nuc_link.stl**: Mesh for the Intel NUC.
-  - **wheel_link.stl**: Mesh for the robot’s wheels.
 - **models**: Contains environmental models for the Gazebo simulation.
-  - **column.stl**: Model of the Artemis Arena central support column.
-  - **lunar_surface.stl**: A model representing the lunar surface, simulating rough terrain for the robot.
-  - **rock_rough.stl**: A rough rock model used for simulating obstacles.
-  - **rock_round.stl**: A round rock model used for simulating obstacles.
+- **src**
+  - **blade_joint_controller.cpp**: Source code for controlling the bulldozer blade's joint.
+  - **teleop**: Contains teleop scripts.
+    - **keyboard_teleop.py**: Script for teleoping the robot using keyboard inputs.
 - **urdf**
-  - **common_properties.xacro**: Defines common properties like material colors for various parts of the robot.
-  - **sim_bot.xacro**: URDF file for the simulated robot in Gazebo.
-  - **test_bot.xacro**: URDF file for a test version of the physical robot.
+  - **bulldozer_bot.xacro**: URDF description of the robot used in Gazebo for simulation.
 - **worlds**
-  - **artemis_arena.world**: A Gazebo world simulating the Artemis Arena, which includes terrain and obstacles similar to the Lunabotics competition.
+  - **artemis_arena.world**: Gazebo world file simulating the Artemis Arena for testing the robot.
 
-**lunabot_system**: This package contains motor controller and utilities to operate the physical robot.
+**lunabot_system**: This package contains various autonomy/manual controllers and utilities.
+- **action**
+  - **Localization.action**: Action definition for localization.
 - **src**
   - **control**
-    - **robot_controller.cpp**: This node controls the entire robot, processing both autonomous `cmd_vel` commands and manual inputs from a game controller.
-    - **navigation_client.cpp**: This action client sends goals to the navigation action server and activates robot mechanisms when each goal is reached.
+    - **localization_server.cpp**: Server responsible for handling localization with an AprilTag.
+    - **navigation_client.cpp**: Receives localization response and sends navigation goals and triggers robot behaviors when goals are reached.
+    - **robot_controller.cpp**: Converts `/cmd_vel` commands and `/joy` inputs into physical motor speed outputs.
   - **utils**
-    - **hardware_monitor.cpp**: Monitors various hardware components (e.g., sensors) and flags errors if they fail to send data.
-    - **imu_rotator.cpp**: Processes IMU data, rotating it into the East-North-Up (ENU) frame for use in localization.
+    - **hardware_monitor.cpp**: Monitors hardware topics and outputs error messages if sensor data is not received.
+    - **imu_rotator.cpp**: Processes and rotates IMU data into the East-North-Up (ENU) frame.
 
-**scripts**
-- **canable_start.sh**: A script for setting up the CAN interface, enabling communication between motor controllers and the onboard computer.
-- **install_dependencies.sh**: A script to install the necessary dependencies for the robot's software stack.
-- **setup_udev_rules.sh**: A script for configuring udev rules for the Intel RealSense D456 camera.
+**scripts**: Various setup and utility scripts.
+- **canable_start.sh**: Sets up the CAN bus interface for motor controller communication.
+- **config**
+  - **99-realsense-d4xx-mipi-dfu.rules**: Udev rules for RealSense D456 cameras.
+  - **99-realsense-libusb.rules**: Udev rules for RealSense cameras using the USB interface.
+- **install_dependencies.sh**: Script to install required dependencies for the robot software.
+- **setup_udev_rules.sh**: Script to set up udev rules for the Intel RealSense camera.
+
