@@ -68,6 +68,7 @@ export MAKEFLAGS="-j4" # Modify number as needed
 Next, rebuild using the same commands in step **4. Build the workspace**.
 
 ## Simulating the Robot
+Note: The side of the robot without the bulldozer blade is considered the front of the robot, as the camera is able to see obstacles better on that side. Therefore, controls may seem reversed but it is intentional.
 
 There are two modes for simulating the robot: **manual** and **autonomous**. 
 
@@ -96,11 +97,43 @@ ros2 launch lunabot_bringup simulation_launch.py # teleop_mode:=xbox (for XBox c
 
 ## Running the Physical Robot
 
-### Configure Device Permissions
 
-The rplidar_ros package needs to access /dev/ttyUSB0 and /dev/ttyUSB1 (using both lidars). While you can run `sudo chmod 777 /dev/ttyUSB0` for example, it would need to be ran each time on startup.
+### SSH Into Robot Computer
 
-#### 1. Add user to dialout group then restart the computer
+SSH (Secure Shell) allows you access the a computer over the network and run commands. The host computer is the computer that you are personally interfacing with, such as laptop. For any future steps that require being ran on the robot computer, you will need to have an SSH connection with it.
+
+#### 1. Create SSH-key (on host computer)
+
+```bash
+ssh-keygen
+```
+
+#### 2. Get username and IP address (on robot computer)
+
+```bash
+whoami
+```
+This will return the username of the robot computer, although you can also see the username just by looking at the terminal. It is the first name before the @, for example, the username would be `grayson` for `grayson@NUC`.
+
+Next, get the IP address:
+```bash
+hostname -I
+```
+
+#### 3. Establish SSH connection
+
+Using the username and IP address from the previous step, now you can connect to the robot computer. It may look something like this for example:
+
+```bash
+ssh asrock@192.168.10.1 # (General format: username@ip_address)
+```
+ It will ask you if you are sure you want to connect, type `yes`. Then, confirm by typing in the robot computer's password. 
+
+### Configure Device Permissions 
+
+Run the next steps on the robot computer.
+
+#### 1. Add user to dialout group then restart computer
 
 ```bash
 sudo usermod -a -G dialout $USER
