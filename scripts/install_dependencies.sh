@@ -12,15 +12,20 @@ install_dependencies() {
 }
 
 install_sparkcan() {
-
     sudo add-apt-repository ppa:graysonarendt/sparkcan
     sudo apt update
     sudo apt install sparkcan -y
 }
 
+install_sensors() {
+    sudo apt install ros-humble-realsense2-*
+    sudo apt install ros-humble-rplidar-ros
+}
+
 main() {
     install_dependencies
     install_sparkcan
+    install_sensors
 }
 
 main

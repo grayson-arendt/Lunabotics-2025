@@ -333,58 +333,6 @@ def generate_launch_description():
         ],
     )
 
-    manual_sequence = GroupAction(
-        actions=[
-            TimerAction(
-                period=2.0,
-                actions=[
-                    icp_odometry_node,
-                    rf2o_odometry_node,
-                    ekf_node,
-                ],
-            ),
-            TimerAction(
-                period=8.0,
-                actions=[
-                    slam_node,
-                ],
-            ),
-            TimerAction(
-                period=15.0,
-                actions=[
-                    nav2_launch,
-                ],
-            ),
-        ],
-    )
-
-    autonomous_sequence = GroupAction(
-        actions=[
-            TimerAction(
-                period=5.0,
-                actions=[
-                    localization_server_node,
-                    navigation_client_node,
-                ],
-            ),
-            TimerAction(
-                period=50.0,
-                actions=[
-                    icp_odometry_node,
-                    rf2o_odometry_node,
-                    ekf_node,
-                    slam_node,
-                ],
-            ),
-            TimerAction(
-                period=60.0,
-                actions=[
-                    nav2_launch,
-                ],
-            ),
-        ],
-    )
-
     ld = LaunchDescription()
 
     ld.add_action(declare_robot_mode)
@@ -403,10 +351,62 @@ def generate_launch_description():
     ld.add_action(joy_node)
     ld.add_action(robot_controller_node)
 
-    if LaunchConfigurationEquals("control_method", "manual"):
-        ld.add_action(manual_sequence)
+    ld.add_action(
+        GroupAction(
+            actions=[
+                TimerAction(
+                    period=2.0,
+                    actions=[
+                        icp_odometry_node,
+                        rf2o_odometry_node,
+                        ekf_node,
+                    ],
+                ),
+                TimerAction(
+                    period=8.0,
+                    actions=[
+                        slam_node,
+                    ],
+                ),
+                TimerAction(
+                    period=15.0,
+                    actions=[
+                        nav2_launch,
+                    ],
+                ),
+            ],
+            condition=LaunchConfigurationEquals("robot_mode", "manual"),
+        )
+    )
 
-    else:
-        ld.add_action(autonomous_sequence)
+    ld.add_action(
+        GroupAction(
+            actions=[
+                TimerAction(
+                    period=5.0,
+                    actions=[
+                        localization_server_node,
+                        navigation_client_node,
+                    ],
+                ),
+                TimerAction(
+                    period=50.0,
+                    actions=[
+                        icp_odometry_node,
+                        rf2o_odometry_node,
+                        ekf_node,
+                        slam_node,
+                    ],
+                ),
+                TimerAction(
+                    period=60.0,
+                    actions=[
+                        nav2_launch,
+                    ],
+                ),
+            ],
+            condition=LaunchConfigurationEquals("robot_mode", "autonomous"),
+        )
+    )
 
     return ld
