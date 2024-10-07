@@ -9,7 +9,7 @@ def generate_launch_description():
     simulation_dir = get_package_share_directory("lunabot_simulation")
     config_dir = get_package_share_directory("lunabot_config")
     rviz_config_file = os.path.join(config_dir, "rviz", "robot_view.rviz")
-    urdf_file = os.path.join(simulation_dir, "urdf", "bulldozer_bot.xacro")
+    urdf_file = os.path.join(simulation_dir, "urdf", "real_bot.xacro")
 
     rviz_launch = Node(
         package="rviz2",

@@ -20,7 +20,7 @@ def generate_launch_description():
     config_dir = get_package_share_directory("lunabot_config")
     nav2_bringup_dir = get_package_share_directory("nav2_bringup")
 
-    urdf_file = os.path.join(simulation_dir, "urdf", "bulldozer_bot.xacro")
+    urdf_file = os.path.join(simulation_dir, "urdf", "simulation_bot.xacro")
     world_file = os.path.join(simulation_dir, "worlds", "artemis_arena.world")
     rviz_config_file = os.path.join(config_dir, "rviz", "robot_view.rviz")
     nav2_params_file = os.path.join(config_dir, "params", "nav2_sim_params.yaml")
@@ -63,7 +63,7 @@ def generate_launch_description():
             "-topic",
             "robot_description",
             "-entity",
-            "bulldozer_bot",
+            "simulation_bot",
             "-x",
             "2.5",
             "-y",
