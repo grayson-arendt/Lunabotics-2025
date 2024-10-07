@@ -1,7 +1,6 @@
 import os
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.substitutions import Command
 from launch.conditions import LaunchConfigurationEquals
 from launch.actions import (
     IncludeLaunchDescription,
@@ -10,19 +9,13 @@ from launch.actions import (
     GroupAction,
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from ament_index_python.packages import (
-    get_package_share_directory,
-    get_package_share_path,
-)
-
+from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
-    simulation_dir = get_package_share_path("lunabot_simulation")
     config_dir = get_package_share_directory("lunabot_config")
     nav2_bringup_dir = get_package_share_directory("nav2_bringup")
-    realsense_dir = get_package_share_path("realsense2_camera")
+    realsense_dir = get_package_share_directory("realsense2_camera")
 
-    urdf_file = os.path.join(simulation_dir, "urdf", "bulldozer_bot.xacro")
     nav2_params_file = os.path.join(config_dir, "params", "nav2_real_params.yaml")
     ekf_params_file = os.path.join(config_dir, "params", "ekf_params.yaml")
     rtabmap_params_file = os.path.join(config_dir, "params", "rtabmap_params.yaml")
@@ -32,21 +25,6 @@ def generate_launch_description():
 
     declare_robot_mode = DeclareLaunchArgument(
         "robot_mode", default_value="manual", choices=["manual", "autonomous"]
-    )
-
-    robot_description = Command(["xacro ", urdf_file])
-
-    robot_state_publisher_node = Node(
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        output="screen",
-        parameters=[{"robot_description": robot_description, "use_sim_time": False}],
-    )
-
-    joint_state_publisher_node = Node(
-        package="joint_state_publisher",
-        executable="joint_state_publisher",
-        parameters=[{"use_sim_time": False}],
     )
 
     map_to_odom_tf = Node(
@@ -93,9 +71,8 @@ def generate_launch_description():
         package="rtabmap_slam",
         executable="rtabmap",
         name="rtabmap",
-        output="screen",
+        output="log",
         parameters=[
-            rtabmap_params_file,
             {
                 "rgbd_cameras": 2,
                 "subscribe_depth": False,
@@ -112,17 +89,14 @@ def generate_launch_description():
                 "subscribe_scan_cloud": False,
                 "subscribe_scan": True,
             },
+            rtabmap_params_file,
         ],
         remappings=[
             ("rgbd_image0", "/d456/rgbd_image"),
             ("rgbd_image1", "/d455/rgbd_image"),
             ("scan", "/scan"),
         ],
-        arguments=[
-            "--ros-args",
-            "--log-level",
-            "error",
-        ],
+        arguments=["--ros-args", "--log-level", "error"],
     )
 
     icp_odometry_node = Node(
@@ -197,7 +171,7 @@ def generate_launch_description():
             os.path.join(nav2_bringup_dir, "launch", "navigation_launch.py")
         ),
         launch_arguments={
-            "use_sim_time": False,
+            "use_sim_time": "false",
             "params_file": nav2_params_file,
         }.items(),
     )
@@ -236,14 +210,7 @@ def generate_launch_description():
             }
         ],
         output="screen",
-        remappings=[("/scan", "/scan_raw")],
-    )
-
-    s2l_filter_node = Node(
-        package="laser_filters",
-        executable="scan_to_scan_filter_chain",
-        parameters=[s2l_filter_params_file],
-        remappings=[("/scan", "/scan_raw"), ("/scan_filtered", "/scan")],
+        remappings=[("/scan", "/scan2")],
     )
 
     dual_camera_launch = IncludeLaunchDescription(
@@ -256,7 +223,7 @@ def generate_launch_description():
         ),
         launch_arguments={
             "camera_name1": "d455",
-            "camera_namespace1": "d455",
+            "camera_namespace1": "",
             "device_type1": "d455",
             "enable_gyro1": "true",
             "enable_accel1": "true",
@@ -264,7 +231,7 @@ def generate_launch_description():
             "depth_module.profile1": "640x360x60",
             "rgb_camera.profile1": "640x360x60",
             "camera_name2": "d456",
-            "camera_namespace2": "d456",
+            "camera_namespace2": "",
             "device_type2": "d456",
             "enable_gyro2": "true",
             "enable_accel2": "true",
@@ -289,8 +256,8 @@ def generate_launch_description():
             {"gain_mag": 0.01},
         ],
         remappings=[
-            ("/imu/data_raw", "/imu/d455/data_raw"),
-            ("/imu/data", "/imu/d455/data"),
+            ("/imu/data_raw", "/d455/imu/data_raw"),
+            ("/imu/data", "/d455/imu/data"),
         ],
     )
 
@@ -309,18 +276,12 @@ def generate_launch_description():
             {"gain_mag": 0.01},
         ],
         remappings=[
-            ("/imu/data_raw", "/imu/d456/data_raw"),
-            ("/imu/data", "/imu/d456/data"),
+            ("/imu/data_raw", "/d456/imu/data_raw"),
+            ("/imu/data", "/d456/imu/data"),
         ],
     )
 
     imu_rotator_node = Node(package="lunabot_system", executable="imu_rotator")
-
-    joy_node = Node(
-        package="joy",
-        executable="joy_node",
-        name="joy_node",
-    )
 
     robot_controller_node = Node(
         package="lunabot_system",
@@ -336,19 +297,15 @@ def generate_launch_description():
     ld = LaunchDescription()
 
     ld.add_action(declare_robot_mode)
-    ld.add_action(robot_state_publisher_node)
-    ld.add_action(joint_state_publisher_node)
     ld.add_action(rgbd_sync1_node)
     ld.add_action(rgbd_sync2_node)
     ld.add_action(map_to_odom_tf)
     ld.add_action(s3_lidar_node)
     ld.add_action(s2l_lidar_node)
-    ld.add_action(s2l_filter_node)
     ld.add_action(dual_camera_launch)
+    ld.add_action(imu_rotator_node)
     ld.add_action(d455_imu_filter)
     ld.add_action(d456_imu_filter)
-    ld.add_action(imu_rotator_node)
-    ld.add_action(joy_node)
     ld.add_action(robot_controller_node)
 
     ld.add_action(

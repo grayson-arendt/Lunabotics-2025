@@ -12,14 +12,11 @@ from launch.actions import (
     GroupAction,
     ExecuteProcess,
 )
-from ament_index_python.packages import (
-    get_package_share_directory,
-    get_package_share_path,
-)
+from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
-    simulation_dir = get_package_share_path("lunabot_simulation")
+    simulation_dir = get_package_share_directory("lunabot_simulation")
     config_dir = get_package_share_directory("lunabot_config")
     nav2_bringup_dir = get_package_share_directory("nav2_bringup")
 
@@ -46,7 +43,7 @@ def generate_launch_description():
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
-                get_package_share_path("gazebo_ros"), "launch", "gazebo.launch.py"
+                get_package_share_directory("gazebo_ros"), "launch", "gazebo.launch.py"
             )
         ),
         launch_arguments={"world": world_file}.items(),

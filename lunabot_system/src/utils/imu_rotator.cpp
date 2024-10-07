@@ -27,8 +27,8 @@ public:
     d456_imu_subscriber_ = this->create_subscription<sensor_msgs::msg::Imu>(
         "d456/imu", 10, std::bind(&IMURotator::d456_imu_callback, this, std::placeholders::_1));
 
-    d455_imu_publisher_ = this->create_publisher<sensor_msgs::msg::Imu>("imu/d455/data_raw", 10);
-    d456_imu_publisher_ = this->create_publisher<sensor_msgs::msg::Imu>("imu/d456/data_raw", 10);
+    d455_imu_publisher_ = this->create_publisher<sensor_msgs::msg::Imu>("d455/imu/data_raw", 10);
+    d456_imu_publisher_ = this->create_publisher<sensor_msgs::msg::Imu>("d456/imu/data_raw", 10);
   }
 
 private:
