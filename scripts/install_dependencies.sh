@@ -17,7 +17,6 @@ install_sparkcan() {
     sudo apt install sparkcan -y
 }
 
-
 install_sensors() {
     sudo apt install ros-humble-realsense2-*
     sudo apt install ros-humble-rplidar-ros
@@ -27,6 +26,7 @@ main() {
     install_sparkcan
     install_sensors
     install_dependencies
+    phoenix
 }
 
 main

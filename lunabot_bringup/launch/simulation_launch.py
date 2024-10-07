@@ -277,6 +277,7 @@ def generate_launch_description():
         package="joy",
         executable="joy_node",
         name="joy_node",
+        condition=LaunchConfigurationEquals("teleop_mode", "xbox"),
     )
 
     teleop_twist_joy_node = Node(
@@ -293,6 +294,7 @@ def generate_launch_description():
                 "scale_angular_turbo.yaw": 1.5,
             }
         ],
+        condition=LaunchConfigurationEquals("teleop_mode", "xbox"),
     )
 
     keyboard_teleop_node = ExecuteProcess(
@@ -304,58 +306,7 @@ def generate_launch_description():
             "ros2 run lunabot_simulation keyboard_teleop.py;  exec bash",
         ],
         output="screen",
-    )
-
-    manual_sequence = GroupAction(
-        actions=[
-            TimerAction(
-                period=2.0,
-                actions=[
-                    icp_odometry_node,
-                    rf2o_odometry_node,
-                    ekf_node,
-                ],
-            ),
-            TimerAction(
-                period=8.0,
-                actions=[
-                    slam_node,
-                ],
-            ),
-            TimerAction(
-                period=15.0,
-                actions=[
-                    nav2_launch,
-                ],
-            ),
-        ],
-    )
-
-    autonomous_sequence = GroupAction(
-        actions=[
-            TimerAction(
-                period=5.0,
-                actions=[
-                    localization_server_node,
-                    navigation_client_node,
-                ],
-            ),
-            TimerAction(
-                period=50.0,
-                actions=[
-                    icp_odometry_node,
-                    rf2o_odometry_node,
-                    ekf_node,
-                    slam_node,
-                ],
-            ),
-            TimerAction(
-                period=60.0,
-                actions=[
-                    nav2_launch,
-                ],
-            ),
-        ],
+        condition=LaunchConfigurationEquals("teleop_mode", "keyboard"),
     )
 
     ld = LaunchDescription()
@@ -375,17 +326,65 @@ def generate_launch_description():
     ld.add_action(rgbd_sync2_node)
     ld.add_action(map_to_odom_tf)
 
-    if LaunchConfigurationEquals("control_method", "manual"):
-        if LaunchConfigurationEquals("teleop_mode", "keyboard"):
-            ld.add_action(keyboard_teleop_node)
+    ld.add_action(
+        GroupAction(
+            actions=[
+                TimerAction(
+                    period=2.0,
+                    actions=[
+                        icp_odometry_node,
+                        rf2o_odometry_node,
+                        ekf_node,
+                    ],
+                ),
+                TimerAction(
+                    period=8.0,
+                    actions=[
+                        slam_node,
+                    ],
+                ),
+                TimerAction(
+                    period=15.0,
+                    actions=[
+                        nav2_launch,
+                    ],
+                ),
+                joy_node,
+                teleop_twist_joy_node,
+                keyboard_teleop_node,
+            ],
+            condition=LaunchConfigurationEquals("robot_mode", "manual"),
+        )
+    )
 
-        else:
-            ld.add_action(joy_node)
-            ld.add_action(teleop_twist_joy_node)
-
-        ld.add_action(manual_sequence)
-
-    else:
-        ld.add_action(autonomous_sequence)
+    ld.add_action(
+        GroupAction(
+            actions=[
+                TimerAction(
+                    period=5.0,
+                    actions=[
+                        localization_server_node,
+                        navigation_client_node,
+                    ],
+                ),
+                TimerAction(
+                    period=50.0,
+                    actions=[
+                        icp_odometry_node,
+                        rf2o_odometry_node,
+                        ekf_node,
+                        slam_node,
+                    ],
+                ),
+                TimerAction(
+                    period=60.0,
+                    actions=[
+                        nav2_launch,
+                    ],
+                ),
+            ],
+            condition=LaunchConfigurationEquals("robot_mode", "autonomous"),
+        )
+    )
 
     return ld

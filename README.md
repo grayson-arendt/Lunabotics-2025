@@ -88,7 +88,7 @@ source install/setup.bash
 #### 2. Launch simulation
 
 ```bash
-ros2 launch lunabot_bringup simulation_launch.py # teleop_mode:=xbox (for XBox controller) robot_mode:=autonomous (to run in autonomous mode)
+ros2 launch lunabot_bringup simulation_launch.py # teleop_mode:=xbox (for Xbox controller) robot_mode:=autonomous (to run in autonomous mode)
 ```
 
 <p align="center">
