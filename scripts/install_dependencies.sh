@@ -26,7 +26,6 @@ main() {
     install_sparkcan
     install_sensors
     install_dependencies
-    phoenix
 }
 
 main
