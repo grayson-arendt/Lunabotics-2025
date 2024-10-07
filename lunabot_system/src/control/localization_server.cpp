@@ -95,6 +95,7 @@ private:
 
         if (aligned_)
         {
+            RCLCPP_INFO(this->get_logger(), "\033[1;32m LOCALIZATION SUCCESS!\033[0m");
             result->success = true;
             result->x = -lateral_distance_;
             result->y = depth_distance_;
@@ -198,6 +199,10 @@ private:
             }
 
             cmd_vel_publisher_->publish(twist);
+        }
+
+        else {
+            aligned_ = true;
         }
     }
 

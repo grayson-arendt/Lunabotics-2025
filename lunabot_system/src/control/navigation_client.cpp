@@ -33,7 +33,7 @@ public:
    * @brief Constructor for the NavigationClient class.
    */
   NavigationClient()
-      : Node("navigator_client"), goal_reached_(false), localization_done_(false), moving_backward_(false), aligning_(false), first_goal_completed_(false)
+      : Node("navigator_client"), goal_reached_(false), localization_done_(false), moving_backward_(false), aligning_(false)
   {
     nav_to_pose_client_ = rclcpp_action::create_client<NavigateToPose>(this, "navigate_to_pose");
     localization_client_ = rclcpp_action::create_client<Localization>(this, "localization_action");
@@ -63,13 +63,10 @@ private:
       send_goal_options.result_callback = std::bind(&NavigationClient::handle_localization_result, this, std::placeholders::_1);
       localization_client_->async_send_goal(goal_msg, send_goal_options);
     }
-    else if (!goal_reached_ && !first_goal_completed_)
+
+    if (!goal_reached_)
     {
       send_first_goal();
-    }
-    else if (first_goal_completed_)
-    {
-      aligning_ = true;
     }
   }
 
@@ -117,7 +114,7 @@ private:
     goal_msg.pose.header.frame_id = "map";
 
     auto send_goal_options = rclcpp_action::Client<NavigateToPose>::SendGoalOptions();
-    send_goal_options.result_callback = std::bind(&NavigationClient::first_goal_result_callback, this, std::placeholders::_1);
+    send_goal_options.result_callback = std::bind(&NavigationClient::goal_result_callback, this, std::placeholders::_1);
 
     this->nav_to_pose_client_->async_send_goal(goal_msg, send_goal_options);
   }
@@ -126,12 +123,12 @@ private:
    * @brief Callback for the result of the first navigation goal.
    * @param result The result of the goal execution.
    */
-  void first_goal_result_callback(const GoalHandleNavigate::WrappedResult &result)
+  void goal_result_callback(const GoalHandleNavigate::WrappedResult &result)
   {
     if (result.code == rclcpp_action::ResultCode::SUCCEEDED)
     {
       goal_reached_ = true;
-      first_goal_completed_ = true;
+      aligning_ = true;
     }
   }
 
@@ -147,7 +144,7 @@ private:
     if (aligning_)
     {
       double target_x = 4.03;
-      double target_y = 0.5;
+      double target_y = 0.6;
       double angle_to_goal = atan2(target_y - current_y_odom_, target_x - current_x_odom_);
 
       tf2::Quaternion quat(
@@ -165,11 +162,13 @@ private:
 
       if (std::abs(yaw_error) > 0.05)
       {
+        RCLCPP_INFO(this->get_logger(), "\033[1;36mALIGNING TO CONSTRUCTION ZONE...\033[0m");
         twist_msg.angular.z = 0.2 * yaw_error / std::abs(yaw_error);
         cmd_vel_publisher_->publish(twist_msg);
       }
       else
       {
+        RCLCPP_INFO(this->get_logger(), "\033[1;32mCONSTRUCTION ZONE ALIGNMENT SUCCESS!\033[0m");
         twist_msg.angular.z = 0.0;
         cmd_vel_publisher_->publish(twist_msg);
         aligning_ = false;
@@ -187,6 +186,7 @@ private:
 
       if (distance_to_goal <= 0.20)
       {
+        RCLCPP_INFO(this->get_logger(), "\033[1;32mCONSTRUCTION ZONE GOAL SUCCESS!\033[0m");
         auto twist_msg = geometry_msgs::msg::Twist();
         twist_msg.linear.x = 0.0;
         cmd_vel_publisher_->publish(twist_msg);
@@ -221,7 +221,7 @@ private:
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscriber_;
   rclcpp::TimerBase::SharedPtr timer_;
 
-  bool goal_reached_, localization_done_, moving_backward_, aligning_, first_goal_completed_;
+  bool goal_reached_, localization_done_, moving_backward_, aligning_;
   double current_x_odom_, current_y_odom_, initial_x_odom_, initial_y_odom_;
   double distance_traveled_, initial_x_, initial_y_;
 };
