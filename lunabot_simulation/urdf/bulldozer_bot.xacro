@@ -550,9 +550,9 @@
       <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
         <ros>
           <namespace></namespace>
-          <remapping>~/out:=/imu/d456/data</remapping>
+          <remapping>~/out:=/d456/imu/data</remapping>
         </ros>
-        <bodyName>base_link</bodyName>
+        <bodyName>d456_link</bodyName>
         <gaussianNoise>0.0</gaussianNoise>
         <xyzOffset>0 0 0</xyzOffset>
         <rpyOffset>0 0 0</rpyOffset>
