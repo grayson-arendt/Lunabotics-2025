@@ -97,7 +97,7 @@ controller_server:
       max_vel_theta: 0.35
       min_speed_xy: 0.0
       max_speed_xy: 0.1
-      min_speed_theta: 0.08
+      min_speed_theta: 0.1
       acc_lim_x: 1.0
       acc_lim_y: 0.0
       acc_lim_theta: 1.5
@@ -105,8 +105,8 @@ controller_server:
       decel_lim_y: 0.0
       decel_lim_theta: -1.5
       vx_samples: 10
-      vy_samples: 5
-      vtheta_samples: 10
+      vy_samples: 10
+      vtheta_samples: 20
       sim_time: 2.0
       linear_granularity: 0.05
       angular_granularity: 0.025
@@ -114,10 +114,12 @@ controller_server:
       xy_goal_tolerance: 0.25
       trans_stopped_velocity: 0.25
       short_circuit_trajectory_evaluation: true
-      limit_vel_cmd_in_traj: false
+      limit_vel_cmd_in_traj: true
       stateful: true
-      critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
-      BaseObstacle.scale: 2.0
+      critics: ["RotateToGoal", "Oscillation", "ObstacleFootprint", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
+      Oscillation.scale: 5.0
+      Oscillation.reset_dist: 0.2
+      ObstacleFootprint.scale: 2.0
       PathAlign.scale: 32.0
       GoalAlign.scale: 24.0
       PathDist.scale: 64.0
@@ -135,6 +137,7 @@ global_costmap:
       robot_base_frame: base_link
       use_sim_time: true
       resolution: 0.01
+      footprint: "[ [0.5, 0.35], [0.5, -0.35], [-0.5, -0.35], [-0.5, 0.35] ]"
       plugins: ["static_layer", "voxel_layer", "denoise_layer", "inflation_layer"]
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
@@ -174,8 +177,8 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
-        inflation_radius: 0.7
-        cost_scaling_factor: 5.0
+        inflation_radius: 0.85
+        cost_scaling_factor: 15.0
         inflate_unknown: false
         inflate_around_unknown: true
         footprint_clearing_enabled: true
@@ -218,7 +221,7 @@ planner_server:
       max_iterations: 1000000 # maximum total iterations to search for before failing (in case unreachable), set to -1 to disable
       max_on_approach_iterations: 1000 # maximum number of iterations to attempt to reach goal once in tolerance
       max_planning_time: 0.5 # max time in s for planner to plan, smooth
-      cost_travel_multiplier: 2.5 # Cost multiplier to apply to search to steer away from high cost areas. Larger values will place in the center of aisles more exactly (if non-`FREE` cost potential field exists) but take slightly longer to compute. To optimize for speed, a value of 1.0 is reasonable. A reasonable tradeoff value is 2.0. A value of 0.0 effective disables steering away from obstacles and acts like a naive binary search A*.
+      cost_travel_multiplier: 15.0 # Cost multiplier to apply to search to steer away from high cost areas. Larger values will place in the center of aisles more exactly (if non-`FREE` cost potential field exists) but take slightly longer to compute. To optimize for speed, a value of 1.0 is reasonable. A reasonable tradeoff value is 2.0. A value of 0.0 effective disables steering away from obstacles and acts like a naive binary search A*.
       use_final_approach_orientation: false # Whether to set the final path pose at the goal's orientation to the requested orientation (false) or in line with the approach angle so the robot doesn't rotate to heading (true)
       smoother:
         max_iterations: 1000
