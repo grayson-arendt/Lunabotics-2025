@@ -21,7 +21,7 @@ public:
    */
   IMURotator() : Node("imu_rotator")
   {
-    auto qos = rclcpp::QoS(rclcpp::KeepLast(10)).reliable();
+    auto qos = rclcpp::QoS(rclcpp::KeepLast(10)).best_effort();
 
     d455_imu_subscriber_ = this->create_subscription<sensor_msgs::msg::Imu>(
         "d455/imu", qos, std::bind(&IMURotator::d455_imu_callback, this, std::placeholders::_1));

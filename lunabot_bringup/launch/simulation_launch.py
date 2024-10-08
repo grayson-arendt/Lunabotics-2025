@@ -240,7 +240,12 @@ def generate_launch_description():
         executable="ekf_node",
         name="ekf_filter_node",
         output="screen",
-        parameters=[ekf_params_file],
+        parameters=[
+            {
+                "use_sim_time": True,
+            },
+            ekf_params_file,
+        ],
         remappings=[
             ("/odometry/filtered", "/odom"),
         ],

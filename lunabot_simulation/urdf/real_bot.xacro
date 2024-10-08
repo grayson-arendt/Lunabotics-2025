@@ -113,14 +113,14 @@
       <geometry>
         <mesh filename="file:///$(find lunabot_simulation)/meshes/camera_link.stl" />
       </geometry>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 0" rpy="0 0 3.14" />
       <material name="camera_grey" />
     </visual>
     <collision>
       <geometry>
         <mesh filename="file:///$(find lunabot_simulation)/meshes/camera_link.stl" />
       </geometry>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 0" rpy="0 0 3.14" />
     </collision>
   </link>
 
@@ -282,13 +282,13 @@
   <joint name="base_d455_joint" type="fixed">
     <parent link="base_link" />
     <child link="d455_link" />
-    <origin xyz="-0.12 0 0.55" rpy="0 0 0" />
+    <origin xyz="-0.305 0 0.45" rpy="0 0 3.14" />
   </joint>
 
   <joint name="base_d456_joint" type="fixed">
     <parent link="base_link" />
     <child link="d456_link" />
-    <origin xyz="-0.05 0 0.55" rpy="0 0.523599 0" />
+    <origin xyz="0.305 0 0.55" rpy="0 0 0" />
   </joint>
 
 </robot>

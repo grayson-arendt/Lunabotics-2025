@@ -11,6 +11,7 @@ from launch.actions import (
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
 
+
 def generate_launch_description():
     config_dir = get_package_share_directory("lunabot_config")
     nav2_bringup_dir = get_package_share_directory("nav2_bringup")
@@ -39,10 +40,10 @@ def generate_launch_description():
         output="screen",
         parameters=[{"approx_sync": True, "sync_queue_size": 1000}],
         remappings=[
-            ("rgb/image", "d456/color/image_raw"),
-            ("depth/image", "d456/depth/image_rect_raw"),
-            ("rgb/camera_info", "d456/color/camera_info"),
-            ("rgbd_image", "rgbd_image"),
+            ("rgb/image", "/d456/color/image_raw"),
+            ("depth/image", "/d456/depth/image_rect_raw"),
+            ("rgb/camera_info", "/d456/color/camera_info"),
+            ("rgbd_image", "/d456/rgbd_image"),
         ],
         namespace="d456",
         arguments=["--ros-args", "--log-level", "error"],
@@ -55,10 +56,10 @@ def generate_launch_description():
         output="screen",
         parameters=[{"approx_sync": True, "sync_queue_size": 1000}],
         remappings=[
-            ("rgb/image", "d455/color/image_raw"),
-            ("depth/image", "d455/depth/image_rect_raw"),
-            ("rgb/camera_info", "d455/color/camera_info"),
-            ("rgbd_image", "rgbd_image"),
+            ("rgb/image", "/d455/color/image_raw"),
+            ("depth/image", "/d455/depth/image_rect_raw"),
+            ("rgb/camera_info", "/d455/color/camera_info"),
+            ("rgbd_image", "/d455/rgbd_image"),
         ],
         namespace="d455",
         arguments=["--ros-args", "--log-level", "error"],
@@ -89,8 +90,8 @@ def generate_launch_description():
             rtabmap_params_file,
         ],
         remappings=[
-            ("rgbd_image0", "d456/rgbd_image"),
-            ("rgbd_image1", "d455/rgbd_image"),
+            ("rgbd_image0", "/d456/rgbd_image"),
+            ("rgbd_image1", "/d455/rgbd_image"),
         ],
         arguments=["--ros-args", "--log-level", "error"],
     )
@@ -112,7 +113,7 @@ def generate_launch_description():
             }
         ],
         remappings=[
-            ("odom", "icp_odom"),
+            ("/odom", "/icp_odom"),
         ],
         arguments=["--ros-args", "--log-level", "error"],
     )
@@ -141,7 +142,12 @@ def generate_launch_description():
         executable="ekf_node",
         name="ekf_filter_node",
         output="screen",
-        parameters=[ekf_params_file],
+        parameters=[
+            {
+                "use_sim_time": False,
+            },
+            ekf_params_file,
+        ],
         remappings=[
             ("/odometry/filtered", "/odom"),
         ],
@@ -205,7 +211,7 @@ def generate_launch_description():
             }
         ],
         output="screen",
-        remappings=[("scan", "scan2")],
+        remappings=[("/scan", "/scan2")],
     )
 
     dual_camera_launch = IncludeLaunchDescription(
@@ -220,19 +226,21 @@ def generate_launch_description():
             "camera_name1": "d455",
             "camera_namespace1": "",
             "device_type1": "d455",
+            "publish_tf1":"false",
             "enable_gyro1": "true",
             "enable_accel1": "true",
             "unite_imu_method1": "2",
-            "depth_module.profile1": "640x360x60",
-            "rgb_camera.profile1": "640x360x60",
+            "depth_module.profile1": "640x360x30",
+            "rgb_camera.profile1": "640x360x30",
             "camera_name2": "d456",
             "camera_namespace2": "",
             "device_type2": "d456",
+            "publish_tf2":"false",
             "enable_gyro2": "true",
             "enable_accel2": "true",
             "unite_imu_method2": "2",
-            "depth_module.profile2": "640x360x60",
-            "rgb_camera.profile2": "640x360x60",
+            "depth_module.profile2": "640x360x30",
+            "rgb_camera.profile2": "640x360x30",
         }.items(),
     )
 
@@ -251,8 +259,8 @@ def generate_launch_description():
             {"gain_mag": 0.01},
         ],
         remappings=[
-            ("imu/data_raw", "d455/imu/data_raw"),
-            ("imu/data", "d455/imu/data"),
+            ("imu/data_raw", "/d455/imu/data_raw"),
+            ("imu/data", "/d455/imu/data"),
         ],
     )
 
@@ -271,8 +279,8 @@ def generate_launch_description():
             {"gain_mag": 0.01},
         ],
         remappings=[
-            ("imu/data_raw", "d456/imu/data_raw"),
-            ("imu/data", "d456/imu/data"),
+            ("imu/data_raw", "/d456/imu/data_raw"),
+            ("imu/data", "/d456/imu/data"),
         ],
     )
 
