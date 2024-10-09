@@ -11,7 +11,7 @@
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "nav_msgs/msg/odometry.hpp"
-#include "nav2_msgs/action/navigate_to_pose.hpp"
+#include "nav2_msgs/action/navigate_through_poses.hpp"
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2/LinearMath/Matrix3x3.h"
 
@@ -24,8 +24,8 @@
 class NavigationClient : public rclcpp::Node
 {
 public:
-  using NavigateToPose = nav2_msgs::action::NavigateToPose;
-  using GoalHandleNavigate = rclcpp_action::ClientGoalHandle<NavigateToPose>;
+  using NavigateThroughPoses = nav2_msgs::action::NavigateThroughPoses;
+  using GoalHandleNavigate = rclcpp_action::ClientGoalHandle<NavigateThroughPoses>;
   using Localization = lunabot_system::action::Localization;
   using GoalHandleLocalization = rclcpp_action::ClientGoalHandle<Localization>;
 
@@ -33,11 +33,10 @@ public:
    * @brief Constructor for the NavigationClient class.
    */
   NavigationClient()
-      : Node("navigator_client"), goal_reached_(false), localization_done_(false), moving_backward_(false), aligning_(false)
+      : Node("navigator_client"), goal_reached_(false), localization_done_(false)
   {
-    nav_to_pose_client_ = rclcpp_action::create_client<NavigateToPose>(this, "navigate_to_pose");
+    nav_through_poses_client_ = rclcpp_action::create_client<NavigateThroughPoses>(this, "navigate_through_poses");
     localization_client_ = rclcpp_action::create_client<Localization>(this, "localization_action");
-    cmd_vel_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
     odom_subscriber_ = this->create_subscription<nav_msgs::msg::Odometry>(
         "/odom", 10, std::bind(&NavigationClient::odom_callback, this, std::placeholders::_1));
     timer_ = this->create_wall_timer(std::chrono::seconds(1), std::bind(&NavigationClient::localize_and_send_goal, this));
@@ -66,7 +65,7 @@ private:
 
     if (!goal_reached_)
     {
-      send_first_goal();
+      send_navigation_through_poses();
     }
   }
 
@@ -90,37 +89,48 @@ private:
   }
 
   /**
-   * @brief Sends the first navigation goal.
+   * @brief Sends the navigation through poses.
    */
-  void send_first_goal()
+  void send_navigation_through_poses()
   {
-    if (!this->nav_to_pose_client_->wait_for_action_server())
+    if (!this->nav_through_poses_client_->wait_for_action_server())
     {
       RCLCPP_ERROR(this->get_logger(), "NAV2 ACTION SERVER NOT AVAILABLE.");
       rclcpp::shutdown();
       return;
     }
 
-    auto goal_msg = NavigateToPose::Goal();
-    geometry_msgs::msg::Pose goal_pose;
+    auto goal_msg = NavigateThroughPoses::Goal();
+    std::vector<geometry_msgs::msg::PoseStamped> waypoints;
 
-    goal_pose.position.x = initial_x_ + 3.3;
-    goal_pose.position.y = initial_y_ + 2.2;
-    goal_pose.orientation.z = 0.707;
-    goal_pose.orientation.w = 0.707;
+    geometry_msgs::msg::PoseStamped pose1;
+    pose1.header.stamp = this->now();
+    pose1.header.frame_id = "map";
+    pose1.pose.position.x = initial_x_ + 3.3;
+    pose1.pose.position.y = initial_y_ + 2.2;
+    pose1.pose.orientation.z = -0.707;
+    pose1.pose.orientation.w = 0.707;
+    waypoints.push_back(pose1);
 
-    goal_msg.pose.pose = goal_pose;
-    goal_msg.pose.header.stamp = this->now();
-    goal_msg.pose.header.frame_id = "map";
+    geometry_msgs::msg::PoseStamped pose2;
+    pose2.header.stamp = this->now();
+    pose2.header.frame_id = "map";
+    pose2.pose.position.x = 4.03;
+    pose2.pose.position.y = 0.6;
+    pose2.pose.orientation.z = 0.707;
+    pose2.pose.orientation.w = 0.707;
+    waypoints.push_back(pose2);
 
-    auto send_goal_options = rclcpp_action::Client<NavigateToPose>::SendGoalOptions();
+    goal_msg.poses = waypoints;
+
+    auto send_goal_options = rclcpp_action::Client<NavigateThroughPoses>::SendGoalOptions();
     send_goal_options.result_callback = std::bind(&NavigationClient::goal_result_callback, this, std::placeholders::_1);
 
-    this->nav_to_pose_client_->async_send_goal(goal_msg, send_goal_options);
+    this->nav_through_poses_client_->async_send_goal(goal_msg, send_goal_options);
   }
 
   /**
-   * @brief Callback for the result of the first navigation goal.
+   * @brief Callback for the result of the navigation through poses.
    * @param result The result of the goal execution.
    */
   void goal_result_callback(const GoalHandleNavigate::WrappedResult &result)
@@ -128,102 +138,26 @@ private:
     if (result.code == rclcpp_action::ResultCode::SUCCEEDED)
     {
       goal_reached_ = true;
-      aligning_ = true;
+      RCLCPP_INFO(this->get_logger(), "\033[1;32mCONSTRUCTION ZONE GOAL SUCCESS!\033[0m");
     }
   }
 
   /**
-   * @brief Odometry callback to track distance traveled and handle yaw alignment for backward movement.
+   * @brief Odometry callback.
    * @param msg Odometry message.
    */
   void odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
   {
-    current_x_odom_ = msg->pose.pose.position.x;
-    current_y_odom_ = msg->pose.pose.position.y;
-
-    if (aligning_)
-    {
-      double target_x = 4.03;
-      double target_y = 0.6;
-      double angle_to_goal = atan2(target_y - current_y_odom_, target_x - current_x_odom_);
-
-      tf2::Quaternion quat(
-          msg->pose.pose.orientation.x,
-          msg->pose.pose.orientation.y,
-          msg->pose.pose.orientation.z,
-          msg->pose.pose.orientation.w);
-      tf2::Matrix3x3 mat(quat);
-      double roll, pitch, yaw;
-      mat.getRPY(roll, pitch, yaw);
-
-      double yaw_error = normalize_angle(angle_to_goal - yaw + M_PI);
-
-      auto twist_msg = geometry_msgs::msg::Twist();
-
-      if (std::abs(yaw_error) > 0.05)
-      {
-        RCLCPP_INFO(this->get_logger(), "\033[1;36mALIGNING TO CONSTRUCTION ZONE...\033[0m");
-        twist_msg.angular.z = 0.2 * yaw_error / std::abs(yaw_error);
-        cmd_vel_publisher_->publish(twist_msg);
-      }
-      else
-      {
-        RCLCPP_INFO(this->get_logger(), "\033[1;32mCONSTRUCTION ZONE ALIGNMENT SUCCESS!\033[0m");
-        twist_msg.angular.z = 0.0;
-        cmd_vel_publisher_->publish(twist_msg);
-        aligning_ = false;
-        moving_backward_ = true;
-        initial_x_odom_ = current_x_odom_;
-        initial_y_odom_ = current_y_odom_;
-      }
-    }
-
-    if (moving_backward_ && !aligning_)
-    {
-      distance_traveled_ = sqrt(pow(current_x_odom_ - initial_x_odom_, 2) + pow(current_y_odom_ - initial_y_odom_, 2));
-
-      double distance_to_goal = sqrt(pow(4.03 - current_x_odom_, 2) + pow(0.03 - current_y_odom_, 2));
-
-      if (distance_to_goal <= 0.20)
-      {
-        RCLCPP_INFO(this->get_logger(), "\033[1;32mCONSTRUCTION ZONE GOAL SUCCESS!\033[0m");
-        auto twist_msg = geometry_msgs::msg::Twist();
-        twist_msg.linear.x = 0.0;
-        cmd_vel_publisher_->publish(twist_msg);
-        moving_backward_ = false;
-      }
-      else
-      {
-        auto twist_msg = geometry_msgs::msg::Twist();
-        twist_msg.linear.x = -0.25;
-        cmd_vel_publisher_->publish(twist_msg);
-      }
-    }
+    // Handle odometry updates if needed for additional logic
   }
 
-  /**
-   * @brief Normalizes an angle to the range [-pi, pi].
-   * @param angle The angle to normalize.
-   * @return Normalized angle.
-   */
-  double normalize_angle(double angle)
-  {
-    while (angle > M_PI)
-      angle -= 2.0 * M_PI;
-    while (angle < -M_PI)
-      angle += 2.0 * M_PI;
-    return angle;
-  }
-
-  rclcpp_action::Client<NavigateToPose>::SharedPtr nav_to_pose_client_;
+  rclcpp_action::Client<NavigateThroughPoses>::SharedPtr nav_through_poses_client_;
   rclcpp_action::Client<Localization>::SharedPtr localization_client_;
-  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_publisher_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscriber_;
   rclcpp::TimerBase::SharedPtr timer_;
 
-  bool goal_reached_, localization_done_, moving_backward_, aligning_;
-  double current_x_odom_, current_y_odom_, initial_x_odom_, initial_y_odom_;
-  double distance_traveled_, initial_x_, initial_y_;
+  bool goal_reached_, localization_done_;
+  double initial_x_, initial_y_;
 };
 
 /**

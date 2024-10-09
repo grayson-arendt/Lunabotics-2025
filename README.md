@@ -84,8 +84,15 @@ This launches `localization_server` and `navigation_client` and will not allow t
 cd ~/lunabot_ws
 source install/setup.bash
 ```
+#### Open separate terminal windows and source the workspace setup for each next step:
 
-#### 2. Launch simulation
+#### 2. Visualize with RViz2
+
+```bash
+ros2 launch lunabot_bringup visualization_launch.py
+```
+
+#### 3. Launch simulation
 
 ```bash
 ros2 launch lunabot_bringup simulation_launch.py # teleop_mode:=xbox (for Xbox controller) robot_mode:=autonomous (to run in autonomous mode)
@@ -171,7 +178,7 @@ source install/setup.bash
 #### 3. Visualize with RViz2 (host computer)
 
 ```bash
-ros2 launch lunabot_bringup visualization_launch.py
+ros2 launch lunabot_bringup visualization_launch.py visualization_mode:=real
 ```
 
 #### 4. Launch the real robot (robot computer)
