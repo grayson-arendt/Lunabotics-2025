@@ -16,7 +16,7 @@ ekf_filter_node:
     base_link_frame: base_link
     world_frame: odom
     odom0: rf2o_odom
-    odom0_config: [true, true, false, false, false, true, false, false, false, false, false, false, false, false, false]
+    odom0_config: [true, true, false, false, false, false, false, false, false, false, false, false, false, false, false]
     odom0_queue_size: 2
     odom0_nodelay: false
     odom0_differential: false
@@ -24,7 +24,7 @@ ekf_filter_node:
     odom0_pose_rejection_threshold: 5.0
     odom0_twist_rejection_threshold: 1.0
     odom1: icp_odom
-    odom1_config: [true, true, false, false, false, true, false, false, false, false, false, false, false, false, false]
+    odom1_config: [true, true, false, false, false, false, false, false, false, false, false, false, false, false, false]
     odom1_queue_size: 2
     odom1_nodelay: false
     odom1_differential: true
