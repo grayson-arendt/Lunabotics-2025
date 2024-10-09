@@ -97,14 +97,14 @@
       <geometry>
         <mesh filename="file:///$(find lunabot_simulation)/meshes/lidar2_link.stl" />
       </geometry>
-      <origin xyz="0 0 0" rpy="0 0 -3.14" />
+      <origin xyz="0 0 0" rpy="0 0 3.14" />
       <material name="black" />
     </visual>
     <collision>
       <geometry>
         <mesh filename="file:///$(find lunabot_simulation)/meshes/lidar2_link.stl" />
       </geometry>
-      <origin xyz="0 0 0" rpy="0 0 -3.14" />
+      <origin xyz="0 0 0" rpy="0 0 3.14" />
     </collision>
   </link>
 
@@ -288,13 +288,13 @@
   <joint name="base_d455_joint" type="fixed">
     <parent link="base_link" />
     <child link="d455_link" />
-    <origin xyz="-0.12 0 0.55" rpy="0 0 0" />
+    <origin xyz="-0.12 0 0.55" rpy="0 0 3.14" />
   </joint>
 
   <joint name="d455_optical_joint" type="fixed">
     <parent link="d455_link" />
     <child link="d455_optical_link" />
-    <origin xyz="0 0 0" rpy="-1.5708 0 1.5708" />
+    <origin xyz="0 0 0" rpy="-1.5708 0 -1.5708" />
   </joint>
 
   <joint name="base_d456_joint" type="fixed">
@@ -306,7 +306,7 @@
   <joint name="d456_optical_joint" type="fixed">
     <parent link="d456_link" />
     <child link="d456_optical_link" />
-    <origin xyz="0 0 0" rpy="-1.047201 0 -1.5708" />
+    <origin xyz="0 0 0" rpy="-1.5708 0 -1.5708" />
   </joint>
 
   <joint name="imu_joint" type="fixed">
@@ -393,7 +393,7 @@
 
   <gazebo reference="d455_link">
     <sensor type="depth" name="d455">
-      <pose>0 0 0 0 0 3.14</pose>
+      <pose>0 0 0 0 0 0</pose>
       <update_rate>60.0</update_rate>
       <visualize>true</visualize>
       <camera>
@@ -432,7 +432,7 @@
 
   <gazebo reference="d456_link">
     <sensor type="depth" name="d456">
-      <pose>0 0 0 0 -0.523599 0</pose>
+      <pose>0 0 0 0 0 0</pose>
       <update_rate>60.0</update_rate>
       <visualize>true</visualize>
       <camera>
@@ -552,7 +552,7 @@
           <namespace></namespace>
           <remapping>~/out:=/d456/imu/data</remapping>
         </ros>
-        <bodyName>d456_link</bodyName>
+        <bodyName>base_link</bodyName>
         <gaussianNoise>0.0</gaussianNoise>
         <xyzOffset>0 0 0</xyzOffset>
         <rpyOffset>0 0 0</rpyOffset>
