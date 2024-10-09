@@ -214,33 +214,37 @@ def generate_launch_description():
         remappings=[("/scan", "/scan2")],
     )
 
-    dual_camera_launch = IncludeLaunchDescription(
+    d455_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(
-                realsense_dir,
-                "launch",
-                "rs_multi_camera_launch.py",
-            )
+            os.path.join(realsense_dir, "launch", "rs_launch.py")
         ),
         launch_arguments={
-            "camera_name1": "d455",
-            "camera_namespace1": "",
-            "device_type1": "d455",
-            "publish_tf1":"false",
-            "enable_gyro1": "true",
-            "enable_accel1": "true",
-            "unite_imu_method1": "2",
-            "depth_module.profile1": "640x360x30",
-            "rgb_camera.profile1": "640x360x30",
-            "camera_name2": "d456",
-            "camera_namespace2": "",
-            "device_type2": "d456",
-            "publish_tf2":"false",
-            "enable_gyro2": "true",
-            "enable_accel2": "true",
+            "camera_name": "d455",
+            "camera_namespace": "",
+            "device_type": "d455",
+            "publish_tf": "true",
+            "enable_gyro": "true",
+            "enable_accel": "true",
+            "unite_imu_method": "2",
+            "depth_module.profile": "640x360x30",
+            "rgb_camera.profile": "640x360x30",
+        }.items(),
+    )
+
+    d456_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(realsense_dir, "launch", "rs_launch.py")
+        ),
+        launch_arguments={
+            "camera_name": "d456",
+            "camera_namespace": "",
+            "device_type": "d456",
+            "publish_tf": "true",
+            "enable_gyro": "true",
+            "enable_accel": "true",
             "unite_imu_method2": "2",
-            "depth_module.profile2": "640x360x30",
-            "rgb_camera.profile2": "640x360x30",
+            "depth_module.profile": "640x360x30",
+            "rgb_camera.profile": "640x360x30",
         }.items(),
     )
 
@@ -305,7 +309,8 @@ def generate_launch_description():
     ld.add_action(map_to_odom_tf)
     ld.add_action(s3_lidar_node)
     ld.add_action(s2l_lidar_node)
-    ld.add_action(dual_camera_launch)
+    ld.add_action(d455_launch)
+    ld.add_action(d456_launch)
     ld.add_action(imu_rotator_node)
     ld.add_action(d455_imu_filter)
     ld.add_action(d456_imu_filter)
