@@ -181,8 +181,8 @@ private:
       double wheel_radius = outdoor_mode_ ? 0.2 : 0.1016;
       double wheel_distance = 0.5;
 
-      double velocity_left_cmd = 0.1 * (linear_velocity - angular_velocity * wheel_distance / 2.0) / wheel_radius;
-      double velocity_right_cmd = 0.1 * (linear_velocity + angular_velocity * wheel_distance / 2.0) / wheel_radius;
+      double velocity_left_cmd = 0.4 * (linear_velocity - angular_velocity * wheel_distance / 2.0) / wheel_radius;
+      double velocity_right_cmd = 0.4 * (linear_velocity + angular_velocity * wheel_distance / 2.0) / wheel_radius;
 
       left_wheel_motor_.SetDutyCycle(velocity_left_cmd);
       right_wheel_motor_.SetDutyCycle(velocity_right_cmd);

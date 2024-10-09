@@ -23,9 +23,9 @@ install_sensors() {
 }
 
 main() {
-    install_dependencies
     install_sparkcan
     install_sensors
+    install_dependencies
 }
 
 main
