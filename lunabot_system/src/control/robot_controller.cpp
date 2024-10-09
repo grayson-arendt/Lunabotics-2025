@@ -35,9 +35,6 @@ class RobotController : public rclcpp::Node
 public:
     RobotController()
         : Node("motor_controller"), manual_enabled_(true), robot_disabled_(false)
-          /*left_wheel_motor_("can0", 1), right_wheel_motor_("can0", 2),
-          lift_actuator_left_motor_("can0", 3), lift_actuator_right_motor_("can0", 4),
-          tilt_actuator_left_motor_("can0", 5), tilt_actuator_right_motor_("can0", 6)*/
     {
         velocity_subscriber_ = create_subscription<geometry_msgs::msg::Twist>(
             "cmd_vel", 10, std::bind(&RobotController::velocity_callback, this, std::placeholders::_1));
@@ -126,13 +123,6 @@ private:
         }
         left_wheel_motor_.Set(ControlMode::PercentOutput, left_speed_ * speed_multiplier_);
         right_wheel_motor_.Set(ControlMode::PercentOutput, right_speed_ * speed_multiplier_);
-
-        /*
-            lift_actuator_left_motor_.SetDutyCycle(lift_actuator_speed_);
-            lift_actuator_right_motor_.SetDutyCycle(lift_actuator_speed_);
-            tilt_actuator_left_motor_.SetDutyCycle(tilt_actuator_speed_);
-            tilt_actuator_right_motor_.SetDutyCycle(tilt_actuator_speed_);
-            */
     }
 
     /**
@@ -181,7 +171,7 @@ private:
             }
             else
             {
-                SparkFlex::Heartbeat();
+		        ctre::phoenix::unmanaged::Unmanaged::FeedEnable(1000);
             }
 
             control_robot();
@@ -193,16 +183,17 @@ private:
      */
     void velocity_callback(const geometry_msgs::msg::Twist::SharedPtr velocity_msg)
     {
-        if (!manual_enabled_ && navigation_enabled_)
+        if (!manual_enabled_)
         {
-            SparkFlex::Heartbeat();
+	        ctre::phoenix::unmanaged::Unmanaged::FeedEnable(1000);
+
             double linear_velocity = velocity_msg->linear.x;
             double angular_velocity = velocity_msg->angular.z;
             double wheel_radius = outdoor_mode_ ? 0.2 : 0.1016;
             double wheel_distance = 0.5;
 
-            double velocity_left_cmd = 0.1 * (linear_velocity - angular_velocity * wheel_distance / 2.0) / wheel_radius;
-            double velocity_right_cmd = 0.1 * (linear_velocity + angular_velocity * wheel_distance / 2.0) / wheel_radius;
+            double velocity_left_cmd = 0.4 * (linear_velocity - angular_velocity * wheel_distance / 2.0) / wheel_radius;
+            double velocity_right_cmd = 0.4 * (linear_velocity + angular_velocity * wheel_distance / 2.0) / wheel_radius;
 
             left_wheel_motor_.Set(ControlMode::PercentOutput, velocity_left_cmd);
             right_wheel_motor_.Set(ControlMode::PercentOutput, velocity_left_cmd);
@@ -241,13 +232,6 @@ private:
 
     TalonFX left_wheel_motor_{1};
     TalonFX right_wheel_motor_{2};
-    
-    /*
-    SparkMax lift_actuator_left_motor_;
-    SparkMax lift_actuator_right_motor_;
-    SparkMax tilt_actuator_left_motor_;
-    SparkMax tilt_actuator_right_motor_;
-    */
 };
 
 /**
