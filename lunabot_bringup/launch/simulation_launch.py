@@ -16,21 +16,12 @@ from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
-    simulation_dir = get_package_share_directory("lunabot_simulation")
     config_dir = get_package_share_directory("lunabot_config")
     nav2_bringup_dir = get_package_share_directory("nav2_bringup")
 
-    urdf_file = os.path.join(simulation_dir, "urdf", "simulation_bot.xacro")
-    world_file = os.path.join(simulation_dir, "worlds", "artemis_arena.world")
-    rviz_config_file = os.path.join(config_dir, "rviz", "robot_view.rviz")
     nav2_params_file = os.path.join(config_dir, "params", "nav2_sim_params.yaml")
     ekf_params_file = os.path.join(config_dir, "params", "ekf_params.yaml")
     rtabmap_params_file = os.path.join(config_dir, "params", "rtabmap_params.yaml")
-
-    robot_description = Command(["xacro ", urdf_file])
-
-    orientations = {"north": 0.0, "east": 1.5708, "south": 3.1416, "west": -1.5708}
-    robot_orientation = random.choice(list(orientations.values()))
 
     declare_robot_mode = DeclareLaunchArgument(
         "robot_mode", default_value="manual", choices=["manual", "autonomous"]
@@ -38,83 +29,6 @@ def generate_launch_description():
 
     declare_teleop_mode = DeclareLaunchArgument(
         "teleop_mode", default_value="keyboard", choices=["keyboard", "xbox"]
-    )
-
-    gazebo_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory("gazebo_ros"), "launch", "gazebo.launch.py"
-            )
-        ),
-        launch_arguments={"world": world_file}.items(),
-    )
-
-    rviz_launch = Node(
-        package="rviz2",
-        executable="rviz2",
-        output="log",
-        arguments=["-d", rviz_config_file],
-    )
-
-    spawn_robot_node = Node(
-        package="gazebo_ros",
-        executable="spawn_entity.py",
-        arguments=[
-            "-topic",
-            "robot_description",
-            "-entity",
-            "simulation_bot",
-            "-x",
-            "2.5",
-            "-y",
-            "1.6",
-            "-Y",
-            str(robot_orientation),
-            "-z",
-            "0.35",
-        ],
-        output="screen",
-    )
-
-    robot_state_publisher = Node(
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        output="screen",
-        parameters=[{"robot_description": robot_description, "use_sim_time": True}],
-    )
-
-    joint_state_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            "joint_state_broadcaster",
-            "--controller-manager",
-            "/controller_manager",
-        ],
-    )
-
-    diff_drive_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            "diff_drive_controller",
-            "--controller-manager",
-            "/controller_manager",
-        ],
-    )
-
-    position_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            "position_controller",
-            "--controller-manager",
-            "/controller_manager",
-        ],
-    )
-
-    blade_joint_controller_node = Node(
-        package="lunabot_simulation", executable="blade_joint_controller"
     )
 
     topic_remapper_node = Node(
@@ -204,6 +118,7 @@ def generate_launch_description():
                 "publish_tf": False,
                 "approx_sync": True,
                 "Reg/Strategy": "1",
+                "Icp/VoxelSize": "0.05",
                 "ICP/MaxCorrespondenceDistance": "0.5",
                 "ICP/MaxIterations": "1.0",
                 "ICP/Epsilon": "0.00001",
@@ -315,14 +230,6 @@ def generate_launch_description():
 
     ld.add_action(declare_robot_mode)
     ld.add_action(declare_teleop_mode)
-    ld.add_action(gazebo_launch)
-    ld.add_action(rviz_launch)
-    ld.add_action(spawn_robot_node)
-    ld.add_action(robot_state_publisher)
-    ld.add_action(joint_state_broadcaster_spawner)
-    ld.add_action(diff_drive_controller_spawner)
-    ld.add_action(position_controller_spawner)
-    ld.add_action(blade_joint_controller_node)
     ld.add_action(topic_remapper_node)
     ld.add_action(rgbd_sync1_node)
     ld.add_action(rgbd_sync2_node)

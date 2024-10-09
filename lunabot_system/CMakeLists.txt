@@ -57,14 +57,6 @@ target_link_libraries(localization_server ${OpenCV_LIBS})
 rosidl_target_interfaces(navigation_client ${PROJECT_NAME} "rosidl_typesupport_cpp")
 rosidl_target_interfaces(localization_server ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
-target_include_directories(robot_controller PRIVATE include)
-
-set(PHOENIX_LIBS_DIR /usr/lib/phoenix)
-
-target_link_libraries(robot_controller ${PHOENIX_LIBS_DIR}/libCTRE_Phoenix.so)
-target_link_libraries(robot_controller ${PHOENIX_LIBS_DIR}/libCTRE_PhoenixCCI.so)
-target_link_libraries(robot_controller ${PHOENIX_LIBS_DIR}/libCTRE_PhoenixTools.so)
-
 
 # Install targets
 install(TARGETS
