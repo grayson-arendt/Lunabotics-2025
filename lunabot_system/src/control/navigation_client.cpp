@@ -11,7 +11,7 @@
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "nav_msgs/msg/odometry.hpp"
-#include "nav2_msgs/action/navigate_through_poses.hpp"
+#include "nav2_msgs/action/navigate_to_pose.hpp"
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2/LinearMath/Matrix3x3.h"
 
@@ -24,8 +24,8 @@
 class NavigationClient : public rclcpp::Node
 {
 public:
-  using NavigateThroughPoses = nav2_msgs::action::NavigateThroughPoses;
-  using GoalHandleNavigate = rclcpp_action::ClientGoalHandle<NavigateThroughPoses>;
+  using NavigateToPose = nav2_msgs::action::NavigateToPose;
+  using GoalHandleNavigate = rclcpp_action::ClientGoalHandle<NavigateToPose>;
   using Localization = lunabot_system::action::Localization;
   using GoalHandleLocalization = rclcpp_action::ClientGoalHandle<Localization>;
 
@@ -33,13 +33,14 @@ public:
    * @brief Constructor for the NavigationClient class.
    */
   NavigationClient()
-      : Node("navigator_client"), goal_reached_(false), localization_done_(false)
+      : Node("navigator_client"), goal_reached_(false), localization_done_(false), current_goal_index_(0)
   {
-    nav_through_poses_client_ = rclcpp_action::create_client<NavigateThroughPoses>(this, "navigate_through_poses");
+    nav_to_pose_client_ = rclcpp_action::create_client<NavigateToPose>(this, "navigate_to_pose");
     localization_client_ = rclcpp_action::create_client<Localization>(this, "localization_action");
-    odom_subscriber_ = this->create_subscription<nav_msgs::msg::Odometry>(
-        "/odom", 10, std::bind(&NavigationClient::odom_callback, this, std::placeholders::_1));
     timer_ = this->create_wall_timer(std::chrono::seconds(1), std::bind(&NavigationClient::localize_and_send_goal, this));
+    
+    // Define the waypoints
+    setup_waypoints();
   }
 
 private:
@@ -63,9 +64,9 @@ private:
       localization_client_->async_send_goal(goal_msg, send_goal_options);
     }
 
-    if (!goal_reached_)
+    if (localization_done_ && current_goal_index_ < waypoints_.size())
     {
-      send_navigation_through_poses();
+      send_navigation_goal();
     }
   }
 
@@ -89,28 +90,58 @@ private:
   }
 
   /**
-   * @brief Sends the navigation through poses.
+   * @brief Sends the navigation goal.
    */
-  void send_navigation_through_poses()
+  void send_navigation_goal()
   {
-    if (!this->nav_through_poses_client_->wait_for_action_server())
+    if (!this->nav_to_pose_client_->wait_for_action_server())
     {
       RCLCPP_ERROR(this->get_logger(), "NAV2 ACTION SERVER NOT AVAILABLE.");
       rclcpp::shutdown();
       return;
     }
 
-    auto goal_msg = NavigateThroughPoses::Goal();
-    std::vector<geometry_msgs::msg::PoseStamped> waypoints;
+    auto goal_msg = NavigateToPose::Goal();
+    goal_msg.pose = waypoints_[current_goal_index_];
 
+    auto send_goal_options = rclcpp_action::Client<NavigateToPose>::SendGoalOptions();
+    send_goal_options.result_callback = std::bind(&NavigationClient::goal_result_callback, this, std::placeholders::_1);
+
+    this->nav_to_pose_client_->async_send_goal(goal_msg, send_goal_options);
+  }
+
+  /**
+   * @brief Callback for the result of the navigation goal.
+   * @param result The result of the goal execution.
+   */
+  void goal_result_callback(const GoalHandleNavigate::WrappedResult &result)
+  {
+    if (result.code == rclcpp_action::ResultCode::SUCCEEDED)
+    {
+      RCLCPP_INFO_ONCE(this->get_logger(), "GOAL %ld REACHED!", current_goal_index_);
+      current_goal_index_++;
+
+      if (current_goal_index_ >= waypoints_.size())
+      {
+        goal_reached_ = true;
+        RCLCPP_INFO_ONCE(this->get_logger(), "\033[1;32mALL GOALS SUCCESSFULLY REACHED!\033[0m");
+      }
+    }
+  }
+
+  /**
+   * @brief Sets up the list of waypoints (goals) for the robot.
+   */
+  void setup_waypoints()
+  {
     geometry_msgs::msg::PoseStamped pose1;
     pose1.header.stamp = this->now();
     pose1.header.frame_id = "map";
     pose1.pose.position.x = initial_x_ + 3.3;
-    pose1.pose.position.y = initial_y_ + 2.2;
-    pose1.pose.orientation.z = -0.707;
+    pose1.pose.position.y = initial_y_ + 3.2;
+    pose1.pose.orientation.z = 0.707;
     pose1.pose.orientation.w = 0.707;
-    waypoints.push_back(pose1);
+    waypoints_.push_back(pose1);
 
     geometry_msgs::msg::PoseStamped pose2;
     pose2.header.stamp = this->now();
@@ -119,45 +150,18 @@ private:
     pose2.pose.position.y = 0.6;
     pose2.pose.orientation.z = 0.707;
     pose2.pose.orientation.w = 0.707;
-    waypoints.push_back(pose2);
-
-    goal_msg.poses = waypoints;
-
-    auto send_goal_options = rclcpp_action::Client<NavigateThroughPoses>::SendGoalOptions();
-    send_goal_options.result_callback = std::bind(&NavigationClient::goal_result_callback, this, std::placeholders::_1);
-
-    this->nav_through_poses_client_->async_send_goal(goal_msg, send_goal_options);
+    waypoints_.push_back(pose2);
   }
 
-  /**
-   * @brief Callback for the result of the navigation through poses.
-   * @param result The result of the goal execution.
-   */
-  void goal_result_callback(const GoalHandleNavigate::WrappedResult &result)
-  {
-    if (result.code == rclcpp_action::ResultCode::SUCCEEDED)
-    {
-      goal_reached_ = true;
-      RCLCPP_INFO(this->get_logger(), "\033[1;32mCONSTRUCTION ZONE GOAL SUCCESS!\033[0m");
-    }
-  }
-
-  /**
-   * @brief Odometry callback.
-   * @param msg Odometry message.
-   */
-  void odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
-  {
-    // Handle odometry updates if needed for additional logic
-  }
-
-  rclcpp_action::Client<NavigateThroughPoses>::SharedPtr nav_through_poses_client_;
+  rclcpp_action::Client<NavigateToPose>::SharedPtr nav_to_pose_client_;
   rclcpp_action::Client<Localization>::SharedPtr localization_client_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscriber_;
   rclcpp::TimerBase::SharedPtr timer_;
 
   bool goal_reached_, localization_done_;
   double initial_x_, initial_y_;
+  std::vector<geometry_msgs::msg::PoseStamped> waypoints_;
+  size_t current_goal_index_;
 };
 
 /**

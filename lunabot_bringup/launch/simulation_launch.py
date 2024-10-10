@@ -48,7 +48,7 @@ def generate_launch_description():
         executable="rgbd_sync",
         name="rgbd_sync1",
         output="screen",
-        parameters=[{"approx_sync": True, "sync_queue_size": 1000}],
+        parameters=[{"use_sim_time": True, "approx_sync": True, "sync_queue_size": 1000}],
         remappings=[
             ("rgb/image", "/d456/color/image_raw"),
             ("depth/image", "/d456/depth/image_rect_raw"),
@@ -64,7 +64,7 @@ def generate_launch_description():
         executable="rgbd_sync",
         name="rgbd_sync2",
         output="screen",
-        parameters=[{"approx_sync": True, "sync_queue_size": 1000}],
+        parameters=[{"use_sim_time": True, "approx_sync": True, "sync_queue_size": 1000}],
         remappings=[
             ("rgb/image", "/d455/color/image_raw"),
             ("depth/image", "/d455/depth/image_rect_raw"),
@@ -79,9 +79,10 @@ def generate_launch_description():
         package="rtabmap_slam",
         executable="rtabmap",
         name="rtabmap",
-        output="log",
+        output="screen",
         parameters=[
             {
+                "use_sim_time": True,
                 "rgbd_cameras": 2,
                 "subscribe_depth": False,
                 "subscribe_rgbd": True,
@@ -90,12 +91,14 @@ def generate_launch_description():
                 "frame_id": "base_link",
                 "map_frame_id": "map",
                 "odom_frame_id": "odom",
-                "publish_tf": False,
+                "publish_tf": True,
                 "database_path": "",
                 "approx_sync": True,
                 "sync_queue_size": 1000,
                 "subscribe_scan_cloud": False,
                 "subscribe_scan": True,
+                "wait_imu_to_init": True,
+                "imu_topic": "/d456/imu/data",
             },
             rtabmap_params_file,
         ],
@@ -103,6 +106,7 @@ def generate_launch_description():
             ("rgbd_image0", "/d456/rgbd_image"),
             ("rgbd_image1", "/d455/rgbd_image"),
             ("scan", "/scan"),
+            ("odom", "/odom"), 
         ],
         arguments=["--ros-args", "--log-level", "error"],
     )
@@ -113,23 +117,32 @@ def generate_launch_description():
         output="screen",
         parameters=[
             {
+                "use_sim_time": True,
                 "frame_id": "base_link",
                 "odom_frame_id": "odom",
-                "publish_tf": False,
+                "publish_tf": True,
                 "approx_sync": True,
+                "Icp/VoxelSize": "0.02",
+                "Icp/PointToPlaneRadius": "0.0",
+                "Icp/PointToPlaneK": "20",
+                "Icp/CorrespondenceRatio": "0.2",
+                "Icp/PMOutlierRatio": "0.65",
+                "Icp/Epsilon": "0.0013",
+                "Icp/PointToPlaneMinComplexity": "0.0",
+                "Odom/ScanKeyFrameThr": "0.7",
+                "OdomF2M/ScanMaxSize": "15000",
+                "Optimizer/GravitySigma": "0.3",
+                "RGBD/ProximityPathMaxNeighbors": "1",
                 "Reg/Strategy": "1",
-                "Icp/VoxelSize": "0.05",
-                "ICP/MaxCorrespondenceDistance": "0.5",
-                "ICP/MaxIterations": "1.0",
-                "ICP/Epsilon": "0.00001",
             }
         ],
         remappings=[
             ("scan", "/scan"),
-            ("odom", "/icp_odom"),
+            ("odom", "/odometry/filtered"),
         ],
         arguments=["--ros-args", "--log-level", "error"],
     )
+
 
     rf2o_odometry_node = Node(
         package="rf2o_laser_odometry",
@@ -138,6 +151,7 @@ def generate_launch_description():
         output="screen",
         parameters=[
             {
+                "use_sim_time": True,
                 "laser_scan_topic": "/scan",
                 "odom_topic": "/rf2o_odom",
                 "publish_tf": False,
@@ -160,9 +174,6 @@ def generate_launch_description():
                 "use_sim_time": True,
             },
             ekf_params_file,
-        ],
-        remappings=[
-            ("/odometry/filtered", "/odom"),
         ],
     )
 
@@ -233,7 +244,7 @@ def generate_launch_description():
     ld.add_action(topic_remapper_node)
     ld.add_action(rgbd_sync1_node)
     ld.add_action(rgbd_sync2_node)
-    ld.add_action(map_to_odom_tf)
+    #ld.add_action(map_to_odom_tf)
 
     ld.add_action(
         GroupAction(
@@ -247,13 +258,13 @@ def generate_launch_description():
                     ],
                 ),
                 TimerAction(
-                    period=8.0,
+                    period=5.0,
                     actions=[
                         slam_node,
                     ],
                 ),
                 TimerAction(
-                    period=15.0,
+                    period=20.0,
                     actions=[
                         nav2_launch,
                     ],
@@ -270,7 +281,7 @@ def generate_launch_description():
         GroupAction(
             actions=[
                 TimerAction(
-                    period=5.0,
+                    period=3.0,
                     actions=[
                         localization_server_node,
                         navigation_client_node,
