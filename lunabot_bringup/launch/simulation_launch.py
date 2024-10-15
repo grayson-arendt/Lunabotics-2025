@@ -1,8 +1,6 @@
 import os
-import random
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.substitutions import Command
 from launch.conditions import LaunchConfigurationEquals
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.actions import (
@@ -20,7 +18,6 @@ def generate_launch_description():
     nav2_bringup_dir = get_package_share_directory("nav2_bringup")
 
     nav2_params_file = os.path.join(config_dir, "params", "nav2_sim_params.yaml")
-    ekf_params_file = os.path.join(config_dir, "params", "ekf_params.yaml")
     rtabmap_params_file = os.path.join(config_dir, "params", "rtabmap_params.yaml")
 
     declare_robot_mode = DeclareLaunchArgument(
@@ -33,14 +30,6 @@ def generate_launch_description():
 
     topic_remapper_node = Node(
         package="lunabot_simulation", executable="topic_remapper"
-    )
-
-    map_to_odom_tf = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        arguments=["0", "0", "0", "0", "0", "0", "map", "odom"],
-        output="screen",
-        name="static_transform_publisher",
     )
 
     rgbd_sync1_node = Node(
@@ -87,11 +76,12 @@ def generate_launch_description():
                 "subscribe_depth": False,
                 "subscribe_rgbd": True,
                 "subscribe_rgb": False,
-                "subscribe_odom_info": True,
+                "subscribe_odom_info": False,
                 "frame_id": "base_link",
                 "map_frame_id": "map",
                 "odom_frame_id": "odom",
                 "publish_tf": True,
+                "publish_tf_odom": True,
                 "database_path": "",
                 "approx_sync": True,
                 "sync_queue_size": 1000,
@@ -106,7 +96,6 @@ def generate_launch_description():
             ("rgbd_image0", "/d456/rgbd_image"),
             ("rgbd_image1", "/d455/rgbd_image"),
             ("scan", "/scan"),
-            ("odom", "/odom"), 
         ],
         arguments=["--ros-args", "--log-level", "error"],
     )
@@ -117,64 +106,32 @@ def generate_launch_description():
         output="screen",
         parameters=[
             {
-                "use_sim_time": True,
                 "frame_id": "base_link",
                 "odom_frame_id": "odom",
                 "publish_tf": True,
                 "approx_sync": True,
+                "Reg/Strategy": "1",
+                "Odom/Strategy": "0",
+                "Odom/FilteringStrategy": "1",
+                "Odom/KalmanProcessNoise": "0.001",
+                "Odom/KalmanMeasurementNoise": "0.01",
+                "Odom/GuessMotion": "true",
+                "Odom/GuessSmoothingDelay": "0.1",
                 "Icp/VoxelSize": "0.02",
+                "Icp/PointToPlane": "true",
                 "Icp/PointToPlaneRadius": "0.0",
                 "Icp/PointToPlaneK": "20",
-                "Icp/CorrespondenceRatio": "0.2",
+                "Icp/CorrespondenceRatio": "0.3",
                 "Icp/PMOutlierRatio": "0.65",
                 "Icp/Epsilon": "0.0013",
-                "Icp/PointToPlaneMinComplexity": "0.0",
-                "Odom/ScanKeyFrameThr": "0.7",
-                "OdomF2M/ScanMaxSize": "15000",
-                "Optimizer/GravitySigma": "0.3",
-                "RGBD/ProximityPathMaxNeighbors": "1",
-                "Reg/Strategy": "1",
+                "Icp/MaxCorrespondenceDistance": "0.05",
             }
         ],
         remappings=[
             ("scan", "/scan"),
-            ("odom", "/odometry/filtered"),
+            ("odom", "/odom"),
         ],
         arguments=["--ros-args", "--log-level", "error"],
-    )
-
-
-    rf2o_odometry_node = Node(
-        package="rf2o_laser_odometry",
-        executable="rf2o_laser_odometry_node",
-        name="rf2o_laser_odometry",
-        output="screen",
-        parameters=[
-            {
-                "use_sim_time": True,
-                "laser_scan_topic": "/scan",
-                "odom_topic": "/rf2o_odom",
-                "publish_tf": False,
-                "base_frame_id": "base_link",
-                "odom_frame_id": "odom",
-                "init_pose_from_topic": "",
-                "freq": 50.0,
-            }
-        ],
-        arguments=["--ros-args", "--log-level", "error"],
-    )
-
-    ekf_node = Node(
-        package="robot_localization",
-        executable="ekf_node",
-        name="ekf_filter_node",
-        output="screen",
-        parameters=[
-            {
-                "use_sim_time": True,
-            },
-            ekf_params_file,
-        ],
     )
 
     localization_server_node = Node(
@@ -231,7 +188,7 @@ def generate_launch_description():
             "--",
             "bash",
             "-c",
-            "ros2 run lunabot_simulation keyboard_teleop.py;  exec bash",
+            "ros2 run lunabot_simulation keyboard_teleop.py; exit"
         ],
         output="screen",
         condition=LaunchConfigurationEquals("teleop_mode", "keyboard"),
@@ -244,7 +201,6 @@ def generate_launch_description():
     ld.add_action(topic_remapper_node)
     ld.add_action(rgbd_sync1_node)
     ld.add_action(rgbd_sync2_node)
-    #ld.add_action(map_to_odom_tf)
 
     ld.add_action(
         GroupAction(
@@ -253,8 +209,6 @@ def generate_launch_description():
                     period=2.0,
                     actions=[
                         icp_odometry_node,
-                        rf2o_odometry_node,
-                        ekf_node,
                     ],
                 ),
                 TimerAction(
@@ -291,8 +245,6 @@ def generate_launch_description():
                     period=50.0,
                     actions=[
                         icp_odometry_node,
-                        rf2o_odometry_node,
-                        ekf_node,
                         slam_node,
                     ],
                 ),

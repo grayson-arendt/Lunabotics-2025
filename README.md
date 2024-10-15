@@ -55,7 +55,7 @@ Building may take some time due to the rtabmap and rtabmap_ros packages in lunab
 
 ```bash
 cd ~/lunabot_ws
-colcon build --cmake-args -DRTABMAP_SYNC_MULTI_RGBD=ON -DWITH_OPENGV=OFF --parallel-workers 4 # Modify number as needed, this is how many packages are built concurrently
+colcon build --cmake-args -DRTABMAP_SYNC_MULTI_RGBD=ON -DWITH_OPENCV=ON -DWITH_VINS-Fusion=ON -DWITH_APRILTAG=ON -DWITH_OPENGV=OFF --parallel-workers 4 # Modify number as needed, this is how many packages are built concurrently
 ```
 
 #### 5. (Optional) Set MAKEFLAG and Rebuild
