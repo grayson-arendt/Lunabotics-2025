@@ -95,7 +95,7 @@ private:
 
         if (aligned_)
         {
-            RCLCPP_INFO(this->get_logger(), "\033[1;32m LOCALIZATION SUCCESS!\033[0m");
+            RCLCPP_INFO_ONCE(this->get_logger(), "\033[1;32m LOCALIZATION SUCCESS!\033[0m");
             result->success = true;
             result->x = -lateral_distance_;
             result->y = depth_distance_;

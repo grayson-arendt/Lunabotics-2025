@@ -1,8 +1,6 @@
 import os
-import random
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.substitutions import Command
 from launch.conditions import LaunchConfigurationEquals
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.actions import (
@@ -16,21 +14,11 @@ from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
-    simulation_dir = get_package_share_directory("lunabot_simulation")
     config_dir = get_package_share_directory("lunabot_config")
     nav2_bringup_dir = get_package_share_directory("nav2_bringup")
 
-    urdf_file = os.path.join(simulation_dir, "urdf", "simulation_bot.xacro")
-    world_file = os.path.join(simulation_dir, "worlds", "artemis_arena.world")
-    rviz_config_file = os.path.join(config_dir, "rviz", "robot_view.rviz")
     nav2_params_file = os.path.join(config_dir, "params", "nav2_sim_params.yaml")
-    ekf_params_file = os.path.join(config_dir, "params", "ekf_params.yaml")
     rtabmap_params_file = os.path.join(config_dir, "params", "rtabmap_params.yaml")
-
-    robot_description = Command(["xacro ", urdf_file])
-
-    orientations = {"north": 0.0, "east": 1.5708, "south": 3.1416, "west": -1.5708}
-    robot_orientation = random.choice(list(orientations.values()))
 
     declare_robot_mode = DeclareLaunchArgument(
         "robot_mode", default_value="manual", choices=["manual", "autonomous"]
@@ -40,93 +28,8 @@ def generate_launch_description():
         "teleop_mode", default_value="keyboard", choices=["keyboard", "xbox"]
     )
 
-    gazebo_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory("gazebo_ros"), "launch", "gazebo.launch.py"
-            )
-        ),
-        launch_arguments={"world": world_file}.items(),
-    )
-
-    rviz_launch = Node(
-        package="rviz2",
-        executable="rviz2",
-        output="log",
-        arguments=["-d", rviz_config_file],
-    )
-
-    spawn_robot_node = Node(
-        package="gazebo_ros",
-        executable="spawn_entity.py",
-        arguments=[
-            "-topic",
-            "robot_description",
-            "-entity",
-            "simulation_bot",
-            "-x",
-            "2.5",
-            "-y",
-            "1.6",
-            "-Y",
-            str(robot_orientation),
-            "-z",
-            "0.35",
-        ],
-        output="screen",
-    )
-
-    robot_state_publisher = Node(
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        output="screen",
-        parameters=[{"robot_description": robot_description, "use_sim_time": True}],
-    )
-
-    joint_state_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            "joint_state_broadcaster",
-            "--controller-manager",
-            "/controller_manager",
-        ],
-    )
-
-    diff_drive_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            "diff_drive_controller",
-            "--controller-manager",
-            "/controller_manager",
-        ],
-    )
-
-    position_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            "position_controller",
-            "--controller-manager",
-            "/controller_manager",
-        ],
-    )
-
-    blade_joint_controller_node = Node(
-        package="lunabot_simulation", executable="blade_joint_controller"
-    )
-
     topic_remapper_node = Node(
         package="lunabot_simulation", executable="topic_remapper"
-    )
-
-    map_to_odom_tf = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        arguments=["0", "0", "0", "0", "0", "0", "map", "odom"],
-        output="screen",
-        name="static_transform_publisher",
     )
 
     rgbd_sync1_node = Node(
@@ -134,7 +37,7 @@ def generate_launch_description():
         executable="rgbd_sync",
         name="rgbd_sync1",
         output="screen",
-        parameters=[{"approx_sync": True, "sync_queue_size": 1000}],
+        parameters=[{"use_sim_time": True, "approx_sync": True, "sync_queue_size": 1000}],
         remappings=[
             ("rgb/image", "/d456/color/image_raw"),
             ("depth/image", "/d456/depth/image_rect_raw"),
@@ -150,7 +53,7 @@ def generate_launch_description():
         executable="rgbd_sync",
         name="rgbd_sync2",
         output="screen",
-        parameters=[{"approx_sync": True, "sync_queue_size": 1000}],
+        parameters=[{"use_sim_time": True, "approx_sync": True, "sync_queue_size": 1000}],
         remappings=[
             ("rgb/image", "/d455/color/image_raw"),
             ("depth/image", "/d455/depth/image_rect_raw"),
@@ -165,23 +68,27 @@ def generate_launch_description():
         package="rtabmap_slam",
         executable="rtabmap",
         name="rtabmap",
-        output="log",
+        output="screen",
         parameters=[
             {
+                "use_sim_time": True,
                 "rgbd_cameras": 2,
                 "subscribe_depth": False,
                 "subscribe_rgbd": True,
                 "subscribe_rgb": False,
-                "subscribe_odom_info": True,
+                "subscribe_odom_info": False,
                 "frame_id": "base_link",
                 "map_frame_id": "map",
                 "odom_frame_id": "odom",
-                "publish_tf": False,
+                "publish_tf": True,
+                "publish_tf_odom": True,
                 "database_path": "",
                 "approx_sync": True,
                 "sync_queue_size": 1000,
                 "subscribe_scan_cloud": False,
                 "subscribe_scan": True,
+                "wait_imu_to_init": True,
+                "imu_topic": "/d456/imu/data",
             },
             rtabmap_params_file,
         ],
@@ -201,54 +108,30 @@ def generate_launch_description():
             {
                 "frame_id": "base_link",
                 "odom_frame_id": "odom",
-                "publish_tf": False,
+                "publish_tf": True,
                 "approx_sync": True,
                 "Reg/Strategy": "1",
-                "ICP/MaxCorrespondenceDistance": "0.5",
-                "ICP/MaxIterations": "1.0",
-                "ICP/Epsilon": "0.00001",
+                "Odom/Strategy": "0",
+                "Odom/FilteringStrategy": "1",
+                "Odom/KalmanProcessNoise": "0.001",
+                "Odom/KalmanMeasurementNoise": "0.01",
+                "Odom/GuessMotion": "true",
+                "Odom/GuessSmoothingDelay": "0.1",
+                "Icp/VoxelSize": "0.02",
+                "Icp/PointToPlane": "true",
+                "Icp/PointToPlaneRadius": "0.0",
+                "Icp/PointToPlaneK": "20",
+                "Icp/CorrespondenceRatio": "0.3",
+                "Icp/PMOutlierRatio": "0.65",
+                "Icp/Epsilon": "0.0013",
+                "Icp/MaxCorrespondenceDistance": "0.05",
             }
         ],
         remappings=[
             ("scan", "/scan"),
-            ("odom", "/icp_odom"),
+            ("odom", "/odom"),
         ],
         arguments=["--ros-args", "--log-level", "error"],
-    )
-
-    rf2o_odometry_node = Node(
-        package="rf2o_laser_odometry",
-        executable="rf2o_laser_odometry_node",
-        name="rf2o_laser_odometry",
-        output="screen",
-        parameters=[
-            {
-                "laser_scan_topic": "/scan",
-                "odom_topic": "/rf2o_odom",
-                "publish_tf": False,
-                "base_frame_id": "base_link",
-                "odom_frame_id": "odom",
-                "init_pose_from_topic": "",
-                "freq": 50.0,
-            }
-        ],
-        arguments=["--ros-args", "--log-level", "error"],
-    )
-
-    ekf_node = Node(
-        package="robot_localization",
-        executable="ekf_node",
-        name="ekf_filter_node",
-        output="screen",
-        parameters=[
-            {
-                "use_sim_time": True,
-            },
-            ekf_params_file,
-        ],
-        remappings=[
-            ("/odometry/filtered", "/odom"),
-        ],
     )
 
     localization_server_node = Node(
@@ -305,7 +188,7 @@ def generate_launch_description():
             "--",
             "bash",
             "-c",
-            "ros2 run lunabot_simulation keyboard_teleop.py;  exec bash",
+            "ros2 run lunabot_simulation keyboard_teleop.py; exit"
         ],
         output="screen",
         condition=LaunchConfigurationEquals("teleop_mode", "keyboard"),
@@ -315,18 +198,9 @@ def generate_launch_description():
 
     ld.add_action(declare_robot_mode)
     ld.add_action(declare_teleop_mode)
-    ld.add_action(gazebo_launch)
-    ld.add_action(rviz_launch)
-    ld.add_action(spawn_robot_node)
-    ld.add_action(robot_state_publisher)
-    ld.add_action(joint_state_broadcaster_spawner)
-    ld.add_action(diff_drive_controller_spawner)
-    ld.add_action(position_controller_spawner)
-    ld.add_action(blade_joint_controller_node)
     ld.add_action(topic_remapper_node)
     ld.add_action(rgbd_sync1_node)
     ld.add_action(rgbd_sync2_node)
-    ld.add_action(map_to_odom_tf)
 
     ld.add_action(
         GroupAction(
@@ -335,18 +209,16 @@ def generate_launch_description():
                     period=2.0,
                     actions=[
                         icp_odometry_node,
-                        rf2o_odometry_node,
-                        ekf_node,
                     ],
                 ),
                 TimerAction(
-                    period=8.0,
+                    period=5.0,
                     actions=[
                         slam_node,
                     ],
                 ),
                 TimerAction(
-                    period=15.0,
+                    period=20.0,
                     actions=[
                         nav2_launch,
                     ],
@@ -363,7 +235,7 @@ def generate_launch_description():
         GroupAction(
             actions=[
                 TimerAction(
-                    period=5.0,
+                    period=3.0,
                     actions=[
                         localization_server_node,
                         navigation_client_node,
@@ -373,8 +245,6 @@ def generate_launch_description():
                     period=50.0,
                     actions=[
                         icp_odometry_node,
-                        rf2o_odometry_node,
-                        ekf_node,
                         slam_node,
                     ],
                 ),
