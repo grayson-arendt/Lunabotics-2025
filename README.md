@@ -51,11 +51,13 @@ chmod +x install_dependencies.sh
 
 #### 4. Build the workspace
 
-Building may take some time due to the rtabmap and rtabmap_ros packages in lunabot_external. This is because two cameras are being used for mapping and it needs to be built from source with the `-DRTABMAP_SYNC_MULTI_RGBD=ON` flag to allow for a multiple camera setup, as multiple cameras are not supported in the default build. To avoid building the entire workspace all over again after the initial build if you make changes, use `colcon build --packages-select name_of_package` and choose the package that you made changes to for rebuilding. You can list multiple packages after the `--packages-select` flag.
+Building may take some time due to the rtabmap and rtabmap_ros packages in lunabot_external. Various flags such as `DRTABMAP_SYNC_MULTI_RGBD=ON` need to be set to enable extra features for RTAB-Map.
+
+To avoid building the entire workspace all over again after the initial build if you make changes, use `colcon build --packages-select name_of_package` and choose the package that you made changes to for rebuilding. You can list multiple packages after the `--packages-select` flag.
 
 ```bash
 cd ~/lunabot_ws
-colcon build --cmake-args -DRTABMAP_SYNC_MULTI_RGBD=ON -DWITH_OPENCV=ON -DWITH_VINS-Fusion=ON -DWITH_APRILTAG=ON -DWITH_OPENGV=OFF --parallel-workers 4 # Modify number as needed, this is how many packages are built concurrently
+colcon build --cmake-args -DRTABMAP_SYNC_MULTI_RGBD=ON -DWITH_OPENCV=ON -DWITH_APRILTAG=ON -DWITH_OPENGV=OFF --parallel-workers 4 # Modify number as needed, this is how many packages are built concurrently
 ```
 
 #### 5. (Optional) Set MAKEFLAG and Rebuild
@@ -197,9 +199,9 @@ ros2 launch lunabot_bringup real_launch.py # robot_mode:=autonomous (to run in a
 
 **lunabot_config**: This package contains configuration files for behavior trees, RViz2 settings, and sensor parameters.
 - **behavior_trees**
-  - **navigate_to_pose_w_replanning_goal_patience_and_recovery.xml**: A behavior tree used with Navigation2 to implement advanced navigation behaviors like goal replanning, patience, and recovery.
+  - **navigate_through_poses_w_replanning_and_recovery.xml**: A behavior tree used with Navigation2 to implement behaviors like goal replanning and recovery for NavigateThroughPoses action.
+  - **navigate_to_pose_w_replanning_goal_patience_and_recovery.xml**: A behavior tree used with Navigation2 to implement behaviors like goal replanning, patience, and recovery NavigateToPose action.
 - **params**
-  - **ekf_params.yaml**: Parameters for the Extended Kalman Filter (EKF) used to fuse sensor data for localization.
   - **gazebo_params.yaml**: Configuration parameters for controllers in the Gazebo simulation.
   - **nav2_real_params.yaml**: Parameters for configuring Navigation2 when running on the physical robot.
   - **nav2_sim_params.yaml**: Parameters for configuring Navigation2 in simulation.
@@ -208,8 +210,7 @@ ros2 launch lunabot_bringup real_launch.py # robot_mode:=autonomous (to run in a
 - **rviz**
   - **robot_view.rviz**: Configuration file for RViz2 that defines how the robot and its environment are visualized.
 
-**lunabot_external**
-- **rf2o_laser_odometry**: A package used to compute laser odometry, estimating the robot’s position over time based on lidar data.
+**lunabot_external** This folder contains external packages that need to be built from source.
 
 **lunabot_simulation**: This package contains assets and code for simulating the robot in Gazebo.
 - **meshes**: Contains the 3D models used to visualize the robot in Gazebo and RViz2.
@@ -219,7 +220,8 @@ ros2 launch lunabot_bringup real_launch.py # robot_mode:=autonomous (to run in a
   - **teleop**: Contains teleop scripts.
     - **keyboard_teleop.py**: Script for teleoping the robot using keyboard inputs.
 - **urdf**
-  - **bulldozer_bot.xacro**: URDF description of the robot used in Gazebo for simulation.
+  - **real_bot.xacro**: URDF description of the real robot.
+  - **simulation_bot.xacro**: URDF description of the robot used in Gazebo for simulation.
 - **worlds**
   - **artemis_arena.world**: Gazebo world file simulating the Artemis Arena for testing the robot.
 
