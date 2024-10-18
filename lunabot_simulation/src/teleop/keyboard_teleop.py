@@ -14,6 +14,7 @@ Drive around with WASD:
         w
    a    s    d
 
+Max speed: 0.5
 Adjust speed:
 q : Increase linear speed
 z : Decrease linear speed
@@ -84,7 +85,9 @@ def main():
     spinner.start()
 
     speed = 0.35
-    turn = 0.45
+    turn = 0.25
+    max_speed = 0.5
+    max_turn = 0.5
     blade_position = 0.0
     max_blade_position = 0.75
     min_blade_position = -0.75
@@ -108,6 +111,8 @@ def main():
             elif key in speedBindings:
                 speed = speed * speedBindings[key][0]
                 turn = turn * speedBindings[key][1]
+                speed = min(max_speed, max(0.0, speed))
+                turn = min(max_turn, max(0.0, turn))
                 print(vels(speed, turn))
                 if status == 14:
                     print(msg)

@@ -1,162 +1,175 @@
 /**
  * @file navigation_client.cpp
  * @author Grayson Arendt
- * @date 9/18/2024
+ * @date 10/2/2024
  */
 
-#include "geometry_msgs/msg/pose.hpp"
-#include "nav2_msgs/action/navigate_to_pose.hpp"
+#include <chrono>
+#include <cmath>
+
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
+#include "geometry_msgs/msg/twist.hpp"
+#include "nav_msgs/msg/odometry.hpp"
+#include "nav2_msgs/action/navigate_to_pose.hpp"
+#include "tf2/LinearMath/Quaternion.h"
+#include "tf2/LinearMath/Matrix3x3.h"
+
+#include "lunabot_system/action/localization.hpp"
 
 /**
- * @brief This NavigationClient class sends two goals to the navigation action
- * server as an action client.
+ * @class NavigationClient
+ * @brief Sends navigation goals, handles received localization data, and controls robot movement based on odometry feedback.
  */
-class NavigationClient : public rclcpp::Node {
+class NavigationClient : public rclcpp::Node
+{
 public:
   using NavigateToPose = nav2_msgs::action::NavigateToPose;
   using GoalHandleNavigate = rclcpp_action::ClientGoalHandle<NavigateToPose>;
+  using Localization = lunabot_system::action::Localization;
+  using GoalHandleLocalization = rclcpp_action::ClientGoalHandle<Localization>;
 
   /**
-   * @brief Constructor for NavigationClient class.
+   * @brief Constructor for the NavigationClient class.
    */
   NavigationClient()
-      : Node("navigator_client"), goal_reached(false), goal_aborted(false),
-        goal_canceled(false), navigate_to_excavation(true) {
-    this->nav_to_pose_client_ =
-        rclcpp_action::create_client<NavigateToPose>(this, "navigate_to_pose");
-    this->timer_ =
-        this->create_wall_timer(std::chrono::milliseconds(500),
-                                std::bind(&NavigationClient::send_goal, this));
+      : Node("navigator_client"), goal_reached_(false), localization_done_(false), current_goal_index_(0)
+  {
+    nav_to_pose_client_ = rclcpp_action::create_client<NavigateToPose>(this, "navigate_to_pose");
+    localization_client_ = rclcpp_action::create_client<Localization>(this, "localization_action");
+    timer_ = this->create_wall_timer(std::chrono::seconds(1), std::bind(&NavigationClient::localize_and_send_goal, this));
+    
+    // Define the waypoints
+    setup_waypoints();
+  }
+
+private:
+  /**
+   * @brief Calls the localization action and starts the navigation to the first goal.
+   */
+  void localize_and_send_goal()
+  {
+    if (!localization_done_)
+    {
+      if (!localization_client_->wait_for_action_server(std::chrono::seconds(10)))
+      {
+        RCLCPP_ERROR(this->get_logger(), "LOCALIZATION ACTION SERVER NOT AVAILABLE.");
+        rclcpp::shutdown();
+        return;
+      }
+
+      auto goal_msg = Localization::Goal();
+      auto send_goal_options = rclcpp_action::Client<Localization>::SendGoalOptions();
+      send_goal_options.result_callback = std::bind(&NavigationClient::handle_localization_result, this, std::placeholders::_1);
+      localization_client_->async_send_goal(goal_msg, send_goal_options);
+    }
+
+    if (localization_done_ && current_goal_index_ < waypoints_.size())
+    {
+      send_navigation_goal();
+    }
+  }
+
+  /**
+   * @brief Handles the result from the localization action.
+   * @param result The result from the localization action.
+   */
+  void handle_localization_result(const GoalHandleLocalization::WrappedResult &result)
+  {
+    if (result.code == rclcpp_action::ResultCode::SUCCEEDED)
+    {
+      initial_x_ = result.result->x;
+      initial_y_ = result.result->y;
+      localization_done_ = true;
+    }
+    else
+    {
+      RCLCPP_ERROR(this->get_logger(), "LOCALIZATION FAILED.");
+      rclcpp::shutdown();
+    }
   }
 
   /**
    * @brief Sends the navigation goal.
    */
-  void send_goal() {
-    this->timer_->cancel();
-
-    if (!this->nav_to_pose_client_->wait_for_action_server()) {
-      RCLCPP_ERROR(
-          this->get_logger(),
-          "\033[1;31mACTION SERVER NOT AVAILABLE... SHUTTING DOWN NODE\033[0m");
+  void send_navigation_goal()
+  {
+    if (!this->nav_to_pose_client_->wait_for_action_server())
+    {
+      RCLCPP_ERROR(this->get_logger(), "NAV2 ACTION SERVER NOT AVAILABLE.");
       rclcpp::shutdown();
+      return;
     }
-
-    auto send_goal_options =
-        rclcpp_action::Client<NavigateToPose>::SendGoalOptions();
-    send_goal_options.result_callback = std::bind(
-        &NavigationClient::result_callback, this, std::placeholders::_1);
 
     auto goal_msg = NavigateToPose::Goal();
-    geometry_msgs::msg::Pose goal_pose;
+    goal_msg.pose = waypoints_[current_goal_index_];
 
-    if (navigate_to_excavation) {
-      goal_pose.position.x = 2.4;
-      goal_pose.position.y = -2.6;
-      goal_pose.position.z = 0.0;
-      goal_pose.orientation.x = 0.0;
-      goal_pose.orientation.y = 0.0;
-      goal_pose.orientation.z = 0.0;
-      goal_pose.orientation.w = 1.0;
-    }
-
-    else {
-      goal_pose.position.x = 0.2;
-      goal_pose.position.y = -3.4;
-      goal_pose.position.z = 0.0;
-      goal_pose.orientation.x = 0.0;
-      goal_pose.orientation.y = 0.0;
-      goal_pose.orientation.z = 1.0;
-      goal_pose.orientation.w = 0.0;
-    }
-
-    goal_msg.pose.pose = goal_pose;
-    goal_msg.pose.header.stamp = this->now();
-    goal_msg.pose.header.frame_id = "map";
-
-    RCLCPP_INFO(this->get_logger(), "\033[0;36mSENDING TARGET GOAL...\033[0m");
+    auto send_goal_options = rclcpp_action::Client<NavigateToPose>::SendGoalOptions();
+    send_goal_options.result_callback = std::bind(&NavigationClient::goal_result_callback, this, std::placeholders::_1);
 
     this->nav_to_pose_client_->async_send_goal(goal_msg, send_goal_options);
   }
 
-private:
   /**
-   * @brief Callback function for result.
-   * @param result The result of the navigation goal.
+   * @brief Callback for the result of the navigation goal.
+   * @param result The result of the goal execution.
    */
-  void result_callback(const GoalHandleNavigate::WrappedResult &result) {
-    switch (result.code) {
-    case rclcpp_action::ResultCode::SUCCEEDED:
-      goal_reached = true;
-      break;
-    case rclcpp_action::ResultCode::ABORTED:
-      goal_aborted = true;
-      break;
-    case rclcpp_action::ResultCode::CANCELED:
-      goal_canceled = true;
-      break;
-    default:
-      break;
-    }
+  void goal_result_callback(const GoalHandleNavigate::WrappedResult &result)
+  {
+    if (result.code == rclcpp_action::ResultCode::SUCCEEDED)
+    {
+      RCLCPP_INFO_ONCE(this->get_logger(), "GOAL %ld REACHED!", current_goal_index_);
+      current_goal_index_++;
 
-    if (navigate_to_excavation && goal_reached) {
-      RCLCPP_INFO(this->get_logger(),
-                  "\033[1;32mEXCAVATION ZONE REACHED\033[0m");
-      navigate_to_excavation = false;
-      goal_reached = false;
-
-      /* Do digging script
-
-
-
-      */
-      send_goal();
-    }
-
-    else if (!navigate_to_excavation && goal_reached) {
-      RCLCPP_INFO(this->get_logger(),
-                  "\033[1;32mCONSTRUCTION ZONE REACHED\033[0m");
-
-      /* Do depositing script
-
-
-
-      */
-      RCLCPP_INFO(this->get_logger(), "\033[1;32mAUTONOMOUS SUCCESS\033[0m");
-    }
-
-    else if ((navigate_to_excavation && goal_aborted) || goal_canceled) {
-      RCLCPP_INFO(this->get_logger(), "\033[1;31mNAVIGATION TO EXCAVATION ZONE "
-                                      "FAILED, ENABLING MANUAL CONTROL\033[0m");
-    }
-
-    else if ((!navigate_to_excavation && goal_aborted) || goal_canceled) {
-      RCLCPP_ERROR(this->get_logger(),
-                   "\033[1;31mNAVIGATION TO CONSTRUCTION ZONE FAILED, ENABLING "
-                   "MANUAL CONTROL\033[0m");
-    }
-
-    else {
-      RCLCPP_ERROR(
-          this->get_logger(),
-          "\033[1;31mUKNOWN RESULT CODE, ENABLING MANUAL CONTROL\033[0m");
+      if (current_goal_index_ >= waypoints_.size())
+      {
+        goal_reached_ = true;
+        RCLCPP_INFO_ONCE(this->get_logger(), "\033[1;32mALL GOALS SUCCESSFULLY REACHED!\033[0m");
+      }
     }
   }
 
+  /**
+   * @brief Sets up the list of waypoints (goals) for the robot.
+   */
+  void setup_waypoints()
+  {
+    geometry_msgs::msg::PoseStamped pose1;
+    pose1.header.stamp = this->now();
+    pose1.header.frame_id = "map";
+    pose1.pose.position.x = initial_x_ + 3.3;
+    pose1.pose.position.y = initial_y_ + 3.2;
+    pose1.pose.orientation.z = 0.707;
+    pose1.pose.orientation.w = 0.707;
+    waypoints_.push_back(pose1);
+
+    geometry_msgs::msg::PoseStamped pose2;
+    pose2.header.stamp = this->now();
+    pose2.header.frame_id = "map";
+    pose2.pose.position.x = 4.03;
+    pose2.pose.position.y = 0.6;
+    pose2.pose.orientation.z = 0.707;
+    pose2.pose.orientation.w = 0.707;
+    waypoints_.push_back(pose2);
+  }
+
   rclcpp_action::Client<NavigateToPose>::SharedPtr nav_to_pose_client_;
+  rclcpp_action::Client<Localization>::SharedPtr localization_client_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscriber_;
   rclcpp::TimerBase::SharedPtr timer_;
-  bool goal_reached, goal_aborted, goal_canceled;
-  bool navigate_to_excavation;
+
+  bool goal_reached_, localization_done_;
+  double initial_x_, initial_y_;
+  std::vector<geometry_msgs::msg::PoseStamped> waypoints_;
+  size_t current_goal_index_;
 };
 
 /**
  * @brief Main function.
- *
- * Initializes and spins the NavigationClient node.
+ * Initializes and runs the NavigationClient node.
  */
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
   rclcpp::init(argc, argv);
   rclcpp::spin(std::make_shared<NavigationClient>());
   rclcpp::shutdown();

@@ -1,36 +1,31 @@
 #!/bin/bash
 
-# Install ROS 2 packages
-install_ros_packages() {
-    local ros_packages=(
-        "ros-humble-rtabmap"
-        "ros-humble-rtabmap-ros"
-        "ros-humble-rplidar-ros"
-        "ros-humble-apriltag-ros"
-        "ros-humble-navigation2"
-        "ros-humble-laser-filters"
-        "ros-humble-robot-localization"
-        "ros-humble-imu-complementary-filter"
-        "ros-humble-ros2-control"
-        "ros-humble-ros2-controllers"
-        "ros-humble-gazebo-ros2-control"
-        "ros-humble-rviz2"
-        "ros-humble-xacro"
-    )
-    apt install -y "${ros_packages[@]}"
+install_dependencies() {
+    cd ../../..
+
+    if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then
+        sudo rosdep init
+    fi
+
+    rosdep update
+    rosdep install --from-paths src --ignore-src -r -y
 }
 
-# Install sparkcan package
 install_sparkcan() {
-    add-apt-repository ppa:graysonarendt/sparkcan
-    apt update
-    apt install sparkcan
+    sudo add-apt-repository ppa:graysonarendt/sparkcan
+    sudo apt update
+    sudo apt install sparkcan -y
 }
 
-# Main script
+install_sensors() {
+    sudo apt install ros-humble-realsense2-*
+    sudo apt install ros-humble-rplidar-ros
+}
+
 main() {
     install_sparkcan
-    install_ros_packages
+    install_sensors
+    install_dependencies
 }
 
 main

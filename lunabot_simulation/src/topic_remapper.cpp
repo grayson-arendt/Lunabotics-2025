@@ -9,14 +9,17 @@
 #include <rclcpp/rclcpp.hpp>
 
 /**
- * @brief A ROS 2 node for remapping odometry and velocity command topics.
+ * @class TopicRemapper
+ * @brief Remaps differential drive controller plugin odometry and velocity command topics.
  */
-class TopicRemapper : public rclcpp::Node {
+class TopicRemapper : public rclcpp::Node
+{
 public:
   /**
    * @brief Constructor for TopicRemapper.
    */
-  TopicRemapper() : Node("topic_remap") {
+  TopicRemapper() : Node("topic_remap")
+  {
     odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
         "/diff_drive_controller/odom", 10,
         std::bind(&TopicRemapper::odom_callback, this, std::placeholders::_1));
@@ -37,7 +40,8 @@ private:
    * @brief Callback for remapping odometry messages.
    * @param msg The received odometry message.
    */
-  void odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg) {
+  void odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
+  {
     odom_pub_->publish(*msg);
   }
 
@@ -45,7 +49,8 @@ private:
    * @brief Callback for remapping velocity command messages.
    * @param msg The received velocity command message.
    */
-  void cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg) {
+  void cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
+  {
     cmd_vel_pub_->publish(*msg);
   }
 
@@ -56,9 +61,11 @@ private:
 };
 
 /**
- * @brief Main function to initialize and spin the TopicRemapper node.
+ * @brief Main function.
+ * Initializes and spins the TopicRemapper node.
  */
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
   rclcpp::init(argc, argv);
   rclcpp::spin(std::make_shared<TopicRemapper>());
   rclcpp::shutdown();
