@@ -1,5 +1,6 @@
 import os
 import random
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.substitutions import Command, LaunchConfiguration
@@ -12,18 +13,20 @@ from launch.actions import (
     OpaqueFunction,
     GroupAction,
 )
-from ament_index_python.packages import get_package_share_directory
-
 
 def set_orientation(context, *args, **kwargs):
-    orientations = {"north": -1.5708, "east": 3.1416, "south": -1.5708 , "west": 0.0}
+    orientations = {"north": -1.5708, "east": 3.1416, "south": -1.5708, "west": 0.0}
     random_orientation = random.choice(list(orientations.values()))
-    chosen_orientation = context.launch_configurations.get('orientation')
+    chosen_orientation = context.launch_configurations.get("orientation")
 
     if chosen_orientation == "random":
-        return [SetLaunchConfiguration('robot_orientation', str(random_orientation))]
+        return [SetLaunchConfiguration("robot_orientation", str(random_orientation))]
     else:
-        return [SetLaunchConfiguration('robot_orientation', str(orientations[chosen_orientation]))]
+        return [
+            SetLaunchConfiguration(
+                "robot_orientation", str(orientations[chosen_orientation])
+            )
+        ]
 
 
 def generate_launch_description():
@@ -31,7 +34,9 @@ def generate_launch_description():
     config_dir = get_package_share_directory("lunabot_config")
 
     rviz_config_file = os.path.join(config_dir, "rviz", "robot_view.rviz")
-    urdf_sim_file = os.path.join(simulation_dir, "urdf", "high_poly", "realistic_simulation_bot.xacro")
+    urdf_sim_file = os.path.join(
+        simulation_dir, "urdf", "high_poly", "realistic_simulation_bot.xacro"
+    )
     urdf_real_file = os.path.join(simulation_dir, "urdf", "low_poly", "real_bot.xacro")
     world_file = os.path.join(simulation_dir, "worlds", "artemis_arena2.world")
     rviz_config_file = os.path.join(config_dir, "rviz", "robot_view.rviz")
@@ -130,7 +135,9 @@ def generate_launch_description():
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="screen",
-        parameters=[{"robot_description": robot_real_description, "use_sim_time": False}],
+        parameters=[
+            {"robot_description": robot_real_description, "use_sim_time": False}
+        ],
     )
 
     joint_state_publisher_node = Node(
@@ -145,7 +152,6 @@ def generate_launch_description():
         name="joy_node",
     )
 
-
     ld = LaunchDescription()
 
     ld.add_action(declare_visualization_mode)
@@ -153,7 +159,7 @@ def generate_launch_description():
 
     ld.add_action(OpaqueFunction(function=set_orientation))
     ld.add_action(rviz_launch)
-    
+
     ld.add_action(
         GroupAction(
             actions=[
@@ -174,7 +180,7 @@ def generate_launch_description():
             actions=[
                 joy_node,
                 robot_real_state_publisher_node,
-                joint_state_publisher_node
+                joint_state_publisher_node,
             ],
             condition=LaunchConfigurationEquals("visualization_mode", "real"),
         )

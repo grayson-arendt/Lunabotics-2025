@@ -1,15 +1,15 @@
 import os
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.conditions import LaunchConfigurationEquals
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.actions import (
     IncludeLaunchDescription,
     DeclareLaunchArgument,
     TimerAction,
     GroupAction,
 )
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
@@ -29,7 +29,9 @@ def generate_launch_description():
         executable="rgbd_sync",
         name="rgbd_sync1",
         output="screen",
-        parameters=[{"use_sim_time": False, "approx_sync": True, "sync_queue_size": 1000}],
+        parameters=[
+            {"use_sim_time": False, "approx_sync": True, "sync_queue_size": 1000}
+        ],
         remappings=[
             ("rgb/image", "/d456/color/image_raw"),
             ("depth/image", "/d456/depth/image_rect_raw"),
@@ -45,7 +47,9 @@ def generate_launch_description():
         executable="rgbd_sync",
         name="rgbd_sync2",
         output="screen",
-        parameters=[{"use_sim_time": False, "approx_sync": True, "sync_queue_size": 1000}],
+        parameters=[
+            {"use_sim_time": False, "approx_sync": True, "sync_queue_size": 1000}
+        ],
         remappings=[
             ("rgb/image", "/d455/color/image_raw"),
             ("depth/image", "/d455/depth/image_rect_raw"),

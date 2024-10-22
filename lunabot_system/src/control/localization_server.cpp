@@ -4,47 +4,53 @@
  * @date 9/30/2024
  */
 
+#include <array>
 #include <chrono>
 #include <cmath>
 #include <string>
 #include <vector>
-#include <array>
 
-#include <opencv2/opencv.hpp>
 #include <opencv2/aruco.hpp>
+#include <opencv2/opencv.hpp>
 
+#include <cv_bridge/cv_bridge.h>
+#include <geometry_msgs/msg/twist.hpp>
+#include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
 #include <sensor_msgs/msg/image.hpp>
-#include <geometry_msgs/msg/twist.hpp>
-#include <nav_msgs/msg/odometry.hpp>
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
-#include <cv_bridge/cv_bridge.h>
 
 #include "lunabot_system/action/localization.hpp"
 
 /**
  * @class LocalizationServer
- * @brief Aligns the robot to an AprilTag and provides localization feedback for pose estimation.
+ * @brief Aligns the robot to an AprilTag and provides localization feedback for
+ * pose estimation.
  */
 class LocalizationServer : public rclcpp::Node
 {
-public:
+  public:
     using Localization = lunabot_system::action::Localization;
     using GoalHandleLocalization = rclcpp_action::ServerGoalHandle<Localization>;
 
     /**
      * @brief Constructor for LocalizationServer class.
      */
-    LocalizationServer() : Node("localization_server"), d455_tag1_detected_(false), d455_tag2_detected_(false), d456_tag1_detected_(false), d456_tag2_detected_(false), turn_direction_set_(false), aligned_(false), alignment_started_(false), goal_received_(false)
+    LocalizationServer()
+        : Node("localization_server"), d455_tag1_detected_(false), d455_tag2_detected_(false),
+          d456_tag1_detected_(false), d456_tag2_detected_(false), turn_direction_set_(false), aligned_(false),
+          alignment_started_(false), goal_received_(false)
     {
         d455_image_subscriber_ = this->create_subscription<sensor_msgs::msg::Image>(
-            "d455/color/image_raw", 10, std::bind(&LocalizationServer::d455_detect_apriltag, this, std::placeholders::_1));
+            "d455/color/image_raw", 10,
+            std::bind(&LocalizationServer::d455_detect_apriltag, this, std::placeholders::_1));
 
         d456_image_subscriber_ = this->create_subscription<sensor_msgs::msg::Image>(
-            "d456/color/image_raw", 10, std::bind(&LocalizationServer::d456_detect_apriltag, this, std::placeholders::_1));
+            "d456/color/image_raw", 10,
+            std::bind(&LocalizationServer::d456_detect_apriltag, this, std::placeholders::_1));
 
         d455_overlay_publisher_ = this->create_publisher<sensor_msgs::msg::Image>("d455/apriltag/overlay_image", 10);
         d456_overlay_publisher_ = this->create_publisher<sensor_msgs::msg::Image>("d456/apriltag/overlay_image", 10);
@@ -52,16 +58,16 @@ public:
         cmd_vel_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
 
         action_server_ = rclcpp_action::create_server<Localization>(
-            this,
-            "localization_action",
+            this, "localization_action",
             std::bind(&LocalizationServer::handle_goal, this, std::placeholders::_1, std::placeholders::_2),
             std::bind(&LocalizationServer::handle_cancel, this, std::placeholders::_1),
             std::bind(&LocalizationServer::handle_accepted, this, std::placeholders::_1));
 
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&LocalizationServer::align_robot, this));
+        timer_ =
+            this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&LocalizationServer::align_robot, this));
     }
 
-private:
+  private:
     /**
      * @brief Handles incoming localization goal.
      */
@@ -115,7 +121,8 @@ private:
     }
 
     /**
-     * @brief Detects AprilTags with the D455 camera and calculates distances and yaw only for the tag on left wall.
+     * @brief Detects AprilTags with the D455 camera and calculates distances and
+     * yaw only for the tag on left wall.
      * @param inputImage The input image from the camera.
      */
     void d455_detect_apriltag(const sensor_msgs::msg::Image::SharedPtr inputImage)
@@ -128,8 +135,10 @@ private:
             std::vector<int> markerIds;
             std::vector<std::vector<cv::Point2f>> markerCorners;
 
-            cv::Mat cameraMatrix = (cv::Mat1d(3, 3) << 383.4185742519996, 0, 309.4326377845713, 0, 385.0909007102088, 240.749949733094, 0, 0, 1);
-            cv::Mat distortionCoefficients = (cv::Mat1d(1, 5) << -0.06792929080519726, 0.08058277259698843, -0.001690544521662593, -0.0008235437909836152, -0.04417756393089296);
+            cv::Mat cameraMatrix = (cv::Mat1d(3, 3) << 383.4185742519996, 0, 309.4326377845713, 0, 385.0909007102088,
+                                    240.749949733094, 0, 0, 1);
+            cv::Mat distortionCoefficients = (cv::Mat1d(1, 5) << -0.06792929080519726, 0.08058277259698843,
+                                              -0.001690544521662593, -0.0008235437909836152, -0.04417756393089296);
 
             std::vector<cv::Vec3d> rvecs, tvecs;
 
@@ -137,7 +146,8 @@ private:
             auto dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_APRILTAG_36h11);
 
             cv::aruco::detectMarkers(currentImage_ptr->image, dictionary, markerCorners, markerIds, parameters);
-            cv::aruco::estimatePoseSingleMarkers(markerCorners, 0.235, cameraMatrix, distortionCoefficients, rvecs, tvecs);
+            cv::aruco::estimatePoseSingleMarkers(markerCorners, 0.235, cameraMatrix, distortionCoefficients, rvecs,
+                                                 tvecs);
 
             if (!markerIds.empty())
             {
@@ -191,8 +201,10 @@ private:
             std::vector<int> markerIds;
             std::vector<std::vector<cv::Point2f>> markerCorners;
 
-            cv::Mat cameraMatrix = (cv::Mat1d(3, 3) << 383.4185742519996, 0, 309.4326377845713, 0, 385.0909007102088, 240.749949733094, 0, 0, 1);
-            cv::Mat distortionCoefficients = (cv::Mat1d(1, 5) << -0.06792929080519726, 0.08058277259698843, -0.001690544521662593, -0.0008235437909836152, -0.04417756393089296);
+            cv::Mat cameraMatrix = (cv::Mat1d(3, 3) << 383.4185742519996, 0, 309.4326377845713, 0, 385.0909007102088,
+                                    240.749949733094, 0, 0, 1);
+            cv::Mat distortionCoefficients = (cv::Mat1d(1, 5) << -0.06792929080519726, 0.08058277259698843,
+                                              -0.001690544521662593, -0.0008235437909836152, -0.04417756393089296);
 
             std::vector<cv::Vec3d> rvecs, tvecs;
 
@@ -200,7 +212,8 @@ private:
             auto dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_APRILTAG_36h11);
 
             cv::aruco::detectMarkers(currentImage_ptr->image, dictionary, markerCorners, markerIds, parameters);
-            cv::aruco::estimatePoseSingleMarkers(markerCorners, 0.235, cameraMatrix, distortionCoefficients, rvecs, tvecs);
+            cv::aruco::estimatePoseSingleMarkers(markerCorners, 0.235, cameraMatrix, distortionCoefficients, rvecs,
+                                                 tvecs);
 
             if (!markerIds.empty())
             {
@@ -238,6 +251,8 @@ private:
      */
     void align_robot()
     {
+        geometry_msgs::msg::Twist twist;
+
         if (!alignment_started_)
         {
             alignment_start_time_ = this->now();
@@ -248,71 +263,60 @@ private:
 
         if (elapsed_time > 60.0 && !aligned_)
         {
-            geometry_msgs::msg::Twist twist;
             twist.angular.z = 0.0;
             cmd_vel_publisher_->publish(twist);
             aligned_ = false;
             return;
         }
 
-        if (!aligned_)
+        if (aligned_)
         {
-            geometry_msgs::msg::Twist twist;
+            twist.angular.z = 0.0;
+            cmd_vel_publisher_->publish(twist);
+            return;
+        }
 
-            if (!turn_direction_set_)
+        if (!turn_direction_set_)
+        {
+            if (d455_tag2_detected_)
             {
-                if (d455_tag2_detected_) // D455 camera sees Tag2 (north)
-                {
-                    turn_counterclockwise_ = false;
-                }
-                else if (d456_tag2_detected_) // D456 camera sees Tag2 (south)
-                {
-                    turn_counterclockwise_ = true;
-                }
-                else if (d455_tag1_detected_) // D455 camera sees Tag1 (east)
-                {
-                    aligned_ = true;
-                    return;
-                }
-                else if (d456_tag1_detected_) // D456 camera sees Tag1 (west)
-                {
-                    turn_counterclockwise_ = true;
-                }
-
-                turn_direction_set_ = true;
-
-                std::string direction_string_ = turn_counterclockwise_ == true ? "\033[1;34mCOUNTER-CLOCKWISE\033[0m" : "\033[1;36mCLOCKWISE\033[0m";
-                RCLCPP_INFO_ONCE(this->get_logger(), "TURNING %s", direction_string_.c_str());
+                turn_counterclockwise_ = false;
             }
-
-            if (turn_counterclockwise_)
+            else if (d456_tag2_detected_ || d456_tag1_detected_)
             {
-                twist.angular.z = 0.4;
+                turn_counterclockwise_ = true;
             }
             else
             {
-                twist.angular.z = -0.4;
+                aligned_ = true;
+                return;
             }
-
-            if (d455_tag1_detected_)
-            {
-                double yaw_error = normalize_angle(tag1_yaw);
-
-                if (std::abs(yaw_error) > 0.025)
-                {
-                    twist.angular.z = (turn_counterclockwise_ == true ? 0.2 : -0.2);
-                }
-                else
-                {
-
-                    twist.angular.z = 0.0;
-                    aligned_ = true;
-                }
-            }
-
-            cmd_vel_publisher_->publish(twist);
+            turn_direction_set_ = true;
         }
+
+        std::string direction_string =
+            turn_counterclockwise_ ? "\033[1;34mCOUNTER-CLOCKWISE\033[0m" : "\033[1;36mCLOCKWISE\033[0m";
+        RCLCPP_INFO_ONCE(this->get_logger(), "TURNING %s", direction_string.c_str());
+
+        twist.angular.z = turn_counterclockwise_ ? 0.4 : -0.4;
+
+        if (d455_tag1_detected_)
+        {
+            double yaw_error = normalize_angle(tag1_yaw);
+            if (std::abs(yaw_error) > 0.025)
+            {
+                twist.angular.z = turn_counterclockwise_ ? 0.2 : -0.2;
+            }
+            else
+            {
+                twist.angular.z = 0.0;
+                aligned_ = true;
+            }
+        }
+
+        cmd_vel_publisher_->publish(twist);
     }
+
     /**
      * @brief Normalizes angle to [-pi, pi].
      * @param angle The input angle.
@@ -351,7 +355,8 @@ private:
         tag1_yaw = asin(rotation_matrix.at<double>(2, 0));
     }
 
-    bool d455_tag1_detected_, d455_tag2_detected_, d456_tag1_detected_, d456_tag2_detected_, turn_direction_set_, turn_counterclockwise_, aligned_, goal_received_, alignment_started_;
+    bool d455_tag1_detected_, d455_tag2_detected_, d456_tag1_detected_, d456_tag2_detected_, turn_direction_set_,
+        turn_counterclockwise_, aligned_, goal_received_, alignment_started_;
     double lateral_distance_, depth_distance_, tag1_yaw;
     rclcpp::Time alignment_start_time_;
 

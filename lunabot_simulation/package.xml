@@ -3,7 +3,8 @@
 <package format="3">
   <name>lunabot_simulation</name>
   <version>1.0.0</version>
-  <description>This package contains basic utilities along with URDF, worlds, and models for visualization in Gazebo and RViz2.</description>
+  <description>This package contains basic utilities along with URDF, worlds, and models for
+    visualization in Gazebo and RViz2.</description>
   <maintainer email="grayson.n.arendt5@gmail.com">Grayson Arendt</maintainer>
   <license>MIT</license>
 
@@ -20,7 +21,7 @@
   <test_depend>ament_lint_common</test_depend>
 
   <export>
-    <gazebo_ros gazebo_model_path="${prefix}/models"/>
+    <gazebo_ros gazebo_model_path="${prefix}/models" />
     <build_type>ament_cmake</build_type>
   </export>
 </package>
