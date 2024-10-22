@@ -127,9 +127,8 @@ class NavigationClient : public rclcpp::Node
     {
         if (result.code == rclcpp_action::ResultCode::SUCCEEDED)
         {
-            RCLCPP_INFO_ONCE(this->get_logger(), "GOAL %ld REACHED!", current_goal_index_);
-
             current_goal_index_++;
+            RCLCPP_INFO_ONCE(this->get_logger(), "GOAL %ld REACHED!", current_goal_index_);
 
             if (current_goal_index_ == 1)
             {
