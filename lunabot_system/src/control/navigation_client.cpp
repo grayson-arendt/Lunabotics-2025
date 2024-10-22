@@ -7,13 +7,14 @@
 #include <chrono>
 #include <cmath>
 
-#include "rclcpp/rclcpp.hpp"
-#include "rclcpp_action/rclcpp_action.hpp"
-#include "geometry_msgs/msg/twist.hpp"
-#include "nav_msgs/msg/odometry.hpp"
-#include "nav2_msgs/action/navigate_to_pose.hpp"
-#include "tf2/LinearMath/Quaternion.h"
-#include "tf2/LinearMath/Matrix3x3.h"
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_action/rclcpp_action.hpp>
+#include <geometry_msgs/msg/twist.hpp>
+#include <nav_msgs/msg/odometry.hpp>
+#include <nav2_msgs/action/navigate_to_pose.hpp>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <std_msgs/msg/float64_multi_array.hpp>
 
 #include "lunabot_system/action/localization.hpp"
 
@@ -37,8 +38,12 @@ public:
   {
     nav_to_pose_client_ = rclcpp_action::create_client<NavigateToPose>(this, "navigate_to_pose");
     localization_client_ = rclcpp_action::create_client<Localization>(this, "localization_action");
+
+    blade_position_publisher_ = this->create_publisher<std_msgs::msg::Float64MultiArray>(
+        "/position_controller/commands", 10);
+
     timer_ = this->create_wall_timer(std::chrono::seconds(1), std::bind(&NavigationClient::localize_and_send_goal, this));
-    
+
     // Define the waypoints
     setup_waypoints();
   }
@@ -119,9 +124,19 @@ private:
     if (result.code == rclcpp_action::ResultCode::SUCCEEDED)
     {
       RCLCPP_INFO_ONCE(this->get_logger(), "GOAL %ld REACHED!", current_goal_index_);
+
       current_goal_index_++;
 
-      if (current_goal_index_ >= waypoints_.size())
+      if (current_goal_index_ == 1)
+      {
+        RCLCPP_INFO_ONCE(this->get_logger(), "\033[1;32mROTATING BLADE...!\033[0m");
+        std_msgs::msg::Float64MultiArray commands;
+        commands.data.push_back(0.1);
+
+        blade_position_publisher_->publish(commands);
+      }
+
+      else if (current_goal_index_ >= waypoints_.size())
       {
         goal_reached_ = true;
         RCLCPP_INFO_ONCE(this->get_logger(), "\033[1;32mALL GOALS SUCCESSFULLY REACHED!\033[0m");
@@ -155,7 +170,7 @@ private:
 
   rclcpp_action::Client<NavigateToPose>::SharedPtr nav_to_pose_client_;
   rclcpp_action::Client<Localization>::SharedPtr localization_client_;
-  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscriber_;
+  rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr blade_position_publisher_;
   rclcpp::TimerBase::SharedPtr timer_;
 
   bool goal_reached_, localization_done_;

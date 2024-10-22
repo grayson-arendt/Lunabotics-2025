@@ -4,10 +4,10 @@
  * @date 9/18/2024
  */
 
-#include "std_msgs/msg/float64_multi_array.hpp"
 #include <algorithm>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joy.hpp>
+#include <std_msgs/msg/float64_multi_array.hpp>
 
 /**
  * @class BladeJointController

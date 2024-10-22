@@ -2,11 +2,12 @@
 
 import sys
 import threading
+import termios
+import tty
 import rclpy
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64MultiArray
-import termios
-import tty
+
 
 msg = """
 ---------------------------

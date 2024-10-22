@@ -91,7 +91,7 @@ source install/setup.bash
 #### 2. Visualize with RViz2
 
 ```bash
-ros2 launch lunabot_bringup visualization_launch.py
+ros2 launch lunabot_bringup visualization_launch.py # orientation:=north (to specify a starting orientation in Gazebo: north, south, east, west, or random)
 ```
 
 #### 3. Launch simulation

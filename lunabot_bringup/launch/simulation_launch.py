@@ -19,6 +19,7 @@ def generate_launch_description():
 
     nav2_params_file = os.path.join(config_dir, "params", "nav2_sim_params.yaml")
     rtabmap_params_file = os.path.join(config_dir, "params", "rtabmap_params.yaml")
+    ekf_params_file = os.path.join(config_dir, "params", "ekf_params.yaml")
 
     declare_robot_mode = DeclareLaunchArgument(
         "robot_mode", default_value="manual", choices=["manual", "autonomous"]
@@ -37,7 +38,9 @@ def generate_launch_description():
         executable="rgbd_sync",
         name="rgbd_sync1",
         output="screen",
-        parameters=[{"use_sim_time": True, "approx_sync": True, "sync_queue_size": 1000}],
+        parameters=[
+            {"use_sim_time": True, "approx_sync": True, "sync_queue_size": 1000}
+        ],
         remappings=[
             ("rgb/image", "/d456/color/image_raw"),
             ("depth/image", "/d456/depth/image_rect_raw"),
@@ -53,7 +56,9 @@ def generate_launch_description():
         executable="rgbd_sync",
         name="rgbd_sync2",
         output="screen",
-        parameters=[{"use_sim_time": True, "approx_sync": True, "sync_queue_size": 1000}],
+        parameters=[
+            {"use_sim_time": True, "approx_sync": True, "sync_queue_size": 1000}
+        ],
         remappings=[
             ("rgb/image", "/d455/color/image_raw"),
             ("depth/image", "/d455/depth/image_rect_raw"),
@@ -68,7 +73,7 @@ def generate_launch_description():
         package="rtabmap_slam",
         executable="rtabmap",
         name="rtabmap",
-        output="screen",
+        output="log",
         parameters=[
             {
                 "use_sim_time": True,
@@ -77,11 +82,12 @@ def generate_launch_description():
                 "subscribe_rgbd": True,
                 "subscribe_rgb": False,
                 "subscribe_odom_info": False,
+                "odom_sensor_sync": True,
                 "frame_id": "base_link",
                 "map_frame_id": "map",
                 "odom_frame_id": "odom",
                 "publish_tf": True,
-                "publish_tf_odom": True,
+                "publish_tf_odom": False,
                 "database_path": "",
                 "approx_sync": True,
                 "sync_queue_size": 1000,
@@ -108,7 +114,7 @@ def generate_launch_description():
             {
                 "frame_id": "base_link",
                 "odom_frame_id": "odom",
-                "publish_tf": True,
+                "publish_tf": False,
                 "approx_sync": True,
                 "Reg/Strategy": "1",
                 "Odom/Strategy": "0",
@@ -129,9 +135,39 @@ def generate_launch_description():
         ],
         remappings=[
             ("scan", "/scan"),
-            ("odom", "/odom"),
+            ("odom", "/icp_odom"),
         ],
         arguments=["--ros-args", "--log-level", "error"],
+    )
+
+    rgbd_odometry_node = Node(
+        package="rtabmap_odom",
+        executable="rgbd_odometry",
+        output="screen",
+        parameters=[
+            {
+                "frame_id": "base_link",
+                "odom_frame_id": "odom",
+                "publish_tf": False,
+                "approx_sync": True,
+                "subscribe_rgbd": True,
+            }
+        ],
+        remappings=[("rgbd_image", "/d455/rgbd_image"), ("odom", "/rgbd_odom")],
+        arguments=["--ros-args", "--log-level", "error"],
+    )
+
+    ekf_node = Node(
+        package="robot_localization",
+        executable="ekf_node",
+        name="ekf_filter_node",
+        output="screen",
+        parameters=[
+            {
+                "use_sim_time": True,
+            },
+            ekf_params_file,
+        ],
     )
 
     localization_server_node = Node(
@@ -188,7 +224,7 @@ def generate_launch_description():
             "--",
             "bash",
             "-c",
-            "ros2 run lunabot_simulation keyboard_teleop.py; exit"
+            "ros2 run lunabot_simulation keyboard_teleop.py; exit",
         ],
         output="screen",
         condition=LaunchConfigurationEquals("teleop_mode", "keyboard"),
@@ -208,7 +244,9 @@ def generate_launch_description():
                 TimerAction(
                     period=2.0,
                     actions=[
+                        rgbd_odometry_node,
                         icp_odometry_node,
+                        ekf_node,
                     ],
                 ),
                 TimerAction(
@@ -244,7 +282,9 @@ def generate_launch_description():
                 TimerAction(
                     period=50.0,
                     actions=[
+                        rgbd_odometry_node,
                         icp_odometry_node,
+                        ekf_node,
                         slam_node,
                     ],
                 ),
