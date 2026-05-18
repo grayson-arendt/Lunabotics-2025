@@ -135,10 +135,10 @@ class BandwidthMonitor(Node):
                     self.avg_latency_pub.publish(Float32(data=avg_latency))
                     
                     if latency > self.latency_threshold:
-                        self.log.warn(f"High latency detected: {latency:.1f} ms to {self.ping_target}")
+                        self.log.warning(f"High latency detected: {latency:.1f} ms to {self.ping_target}")
             else:
                 self.ping_failures += 1
-                self.log.warn(f"Ping failed to {self.ping_target}")
+                self.log.warning(f"Ping failed to {self.ping_target}")
             
             packet_loss = (self.ping_failures / self.ping_count) * 100.0
             self.packet_loss_pub.publish(Float32(data=packet_loss))
