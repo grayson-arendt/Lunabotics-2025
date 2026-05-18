@@ -178,36 +178,34 @@ private:
   void joy_callback(const sensor_msgs::msg::Joy::SharedPtr msg)
   {
     // Detect button presses (rising edges)
-    bool share_pressed = detect_button_press(msg->buttons[9], prev_share_button_);
-    bool menu_pressed = detect_button_press(msg->buttons[10], prev_menu_button_);
-    bool home_pressed = detect_button_press(msg->buttons[12], prev_home_button_);
+    bool home_pressed = detect_button_press(msg->buttons[8], prev_home_button_);
 
-    bool left_paddle_pressed = detect_button_press(msg->buttons[5], prev_left_paddle_);
-    bool right_paddle_pressed = detect_button_press(msg->buttons[2], prev_right_paddle_);
+    bool left_paddle_pressed = detect_button_press(msg->buttons[4], prev_left_paddle_);
+    bool right_paddle_pressed = detect_button_press(msg->buttons[5], prev_right_paddle_);
 
     // Plus (+) button enables manual, Minus (-) button enables auto
-    bool minus_pressed = detect_button_press(msg->buttons[10], prev_btn_minus_);
-    bool plus_pressed = detect_button_press(msg->buttons[11], prev_btn_plus__);
+    bool minus_pressed = detect_button_press(msg->buttons[6], prev_btn_minus_);
+    bool plus_pressed = detect_button_press(msg->buttons[7], prev_btn_plus__);
 
-    // D-pad up/down for preset bucket positions
+    // D-pad up/down for preset bucket positions (axis 7: -1 = down, 1 = up)
     bool dpad_up_pressed = detect_button_press(msg->axes[7] > 0.5, prev_dpad_up_);
     bool dpad_down_pressed = detect_button_press(msg->axes[7] < -0.5, prev_dpad_down_);
 
-    // R4 button for camera servo toggle
-    bool r4_pressed = detect_button_press(msg->buttons[17], prev_r4_);
+    // R4/L4 triggers for camera servo toggle (axis 6: -1 = L4, 1 = R4)
+    bool r4_pressed = detect_button_press(msg->axes[6] > 0.5, prev_r4_);
 
     // X/Y buttons for assisted excavate/deposit actions
-    bool x_pressed = detect_button_press(msg->buttons[3], prev_x_button_);
-    bool y_pressed = detect_button_press(msg->buttons[4], prev_y_button_);
+    bool x_pressed = detect_button_press(msg->buttons[2], prev_x_button_);
+    bool y_pressed = detect_button_press(msg->buttons[3], prev_y_button_);
 
-    if (share_pressed || plus_pressed)
+    if (plus_pressed)
     {
       manual_enabled_ = true;
       LOGGER_INFO(get_logger(), MAGENTA "Manual control:" RESET " " GREEN "Enabled" RESET);
       publish_state();
     }
 
-    if (menu_pressed || minus_pressed)
+    if (minus_pressed)
     {
       manual_enabled_ = false;
       vibration_enabled_ = false;
@@ -492,8 +490,6 @@ private:
   bool prev_left_paddle_ = false;
   bool prev_right_paddle_ = false;
   bool prev_a_button_ = false;
-  bool prev_share_button_ = false;
-  bool prev_menu_button_ = false;
   bool prev_home_button_ = false;
   bool prev_dpad_up_ = false;
   bool prev_dpad_down_ = false;
