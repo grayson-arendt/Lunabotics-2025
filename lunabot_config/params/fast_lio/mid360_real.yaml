@@ -40,7 +40,7 @@
             effect_map_en: false
             map_en: true
             scan_publish_en: true
-            dense_publish_en: falsource se
+            dense_publish_en: false
             scan_bodyframe_pub_en: true
             tf_send_en: true
             odom_frame_id: "odom"
