@@ -19,9 +19,9 @@
 enum class CompetitionMode { KSC, UCF };
 
 static constexpr double drive_speed = 0.3;
-static constexpr int forward_drive_seconds = 15;
-static constexpr double rotation_speed = 0.3;
-static constexpr int rotation_90_deg_seconds = 3;
+static constexpr int forward_drive_seconds = 25;
+static constexpr double rotation_speed = 0.15;
+static constexpr int rotation_90_deg_seconds = 5;
 
 static constexpr double intermediate_waypoint_x = -4.8;
 static constexpr double intermediate_waypoint_y = -3.0;
@@ -65,7 +65,7 @@ public:
     this->declare_parameter("mode", "ucf");
     std::string mode_str = this->get_parameter("mode").as_string();
 
-    if (mode_str == "ucf")
+    if (mode_str == "ksc")
     {
       mode_ = CompetitionMode::UCF;
       current_state_ = State::EXCAVATING;
@@ -73,7 +73,7 @@ public:
     } else
     {
       mode_ = CompetitionMode::KSC;
-      current_state_ = State::EXCAVATING;
+      current_state_ = State::DRIVING_FROM_START;
       LOGGER_INFO(this->get_logger(), "KSC Mode");
     }
 
