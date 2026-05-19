@@ -232,7 +232,7 @@ private:
     // Read joystick axes
     left_joystick_x_ = msg->axes[0];
     left_joystick_y_ = msg->axes[1];
-    right_joystick_y_ = -msg->axes[3];
+    right_joystick_y_ = -msg->axes[4];
 
     if (left_paddle_pressed)
     {
