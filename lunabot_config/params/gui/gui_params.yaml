@@ -7,4 +7,4 @@
 
 bandwidth_monitor:
   ros__parameters:
-    ping_target: "192.168.0.250"  # IP to ping for latency monitoring
+    ping_target: "192.168.1.166"  # IP to ping for latency monitoring
