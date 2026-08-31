@@ -6,7 +6,7 @@ bt_navigator:
     odom_topic: /lio_odom  # Use point_lio odometry directly
     bt_loop_duration: 20
     default_server_timeout: 100
-    wait_for_service_timeout: 1000
+    wait_for_service_timeout: 5000
     action_server_result_timeout: 900.0
 
     navigators: ['navigate_to_pose', 'navigate_through_poses']
@@ -127,7 +127,7 @@ global_costmap:
         footprint_clearing_enabled: true
         map_subscribe_transient_local: true
         subscribe_to_updates: true
-        transform_tolerance: 0.1
+        transform_tolerance: 1.0
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
@@ -199,12 +199,11 @@ planner_server:
       downsample_costmap: false
       downsampling_factor: 1
       allow_unknown: true
-      max_iterations: 1000000
+      max_iterations: 100000
       max_on_approach_iterations: 1000
-      max_planning_time: 1.0
+      max_planning_time: 3.5
       cost_travel_multiplier: 5.0
       use_final_approach_orientation: false
-      max_planning_time: 3.5
       motion_model_for_search: "MOORE"
       angle_quantization_bins: 72
       analytic_expansion_ratio: 3.5

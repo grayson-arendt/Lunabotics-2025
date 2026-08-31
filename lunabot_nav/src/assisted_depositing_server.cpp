@@ -17,7 +17,7 @@
 #include <thread>
 
 static constexpr double deposit_pos = 0.0;
-static constexpr double travel_pos = 0.7854;
+static constexpr double travel_pos = 1.0;
 static constexpr double deposit_seconds = 5.0;
 
 /**

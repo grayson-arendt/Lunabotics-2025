@@ -24,7 +24,7 @@
 #include <thread>
 
 static constexpr double excavation_pos = 1.59;
-static constexpr double travel_pos = 0.7854;
+static constexpr double travel_pos = 1.0;
 static constexpr int forward_seconds = 5;
 
 /**
@@ -176,7 +176,7 @@ private:
     auto motor_cmd = lunabot_msgs::msg::MotorCommands();
     motor_cmd.left_wheel = 0.0;
     motor_cmd.right_wheel = 0.0;
-    motor_cmd.vibration = 1.0;
+    motor_cmd.vibration = 0.0;
 
     while (std::abs(target_position - current_encoder_position_) > 0.01)
     {

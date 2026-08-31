@@ -24,7 +24,7 @@
 #include <thread>
 
 static constexpr double excavation_pos = 1.56;
-static constexpr double travel_pos = 0.7854;
+static constexpr double travel_pos = 1.0;
 static constexpr int forward_seconds = 5;
 static constexpr double drive_speed = 0.3;
 

@@ -18,15 +18,18 @@
 
 enum class CompetitionMode { KSC, UCF };
 
-static constexpr double drive_speed = 0.3;
-static constexpr int forward_drive_seconds = 15;
-static constexpr double rotation_speed = 0.3;
-static constexpr int rotation_90_deg_seconds = 3;
+static constexpr double drive_speed = 0.15;
+static constexpr int forward_drive_seconds = 25;
+static constexpr double rotation_speed = 0.15;
+static constexpr int rotation_90_deg_seconds = 10;
 
-static constexpr double intermediate_waypoint_x = -4.8;
-static constexpr double intermediate_waypoint_y = -3.0;
+static constexpr double first_intermediate_waypoint_x = 0.0;
+static constexpr double first_intermediate_waypoint_y = 3.0;
 
-static constexpr double ksc_construction_zone_x = -4.5;
+static constexpr double intermediate_waypoint_x = 4.8;
+static constexpr double intermediate_waypoint_y = 3.0;
+
+static constexpr double ksc_construction_zone_x = 4.5;
 static constexpr double ksc_construction_zone_y = 0.4;
 
 static constexpr double ucf_construction_zone_x = 6.1;
@@ -51,6 +54,8 @@ public:
     DRIVING_FROM_START,
     EXCAVATING,
     ROTATING,
+    NAVIGATING_TO_FIRST_INTERMEDIATE,
+    ROTATING_AFTER_FIRST_INTERMEDIATE,
     NAVIGATING_TO_INTERMEDIATE,
     NAVIGATING_TO_CONSTRUCTION,
     DEPOSITING,
@@ -62,10 +67,10 @@ public:
    */
   NavigationClient() : Node("navigation_client")
   {
-    this->declare_parameter("mode", "ksc");
+    this->declare_parameter("mode", "ucf");
     std::string mode_str = this->get_parameter("mode").as_string();
 
-    if (mode_str == "ucf")
+    if (mode_str == "ksc")
     {
       mode_ = CompetitionMode::UCF;
       current_state_ = State::EXCAVATING;
@@ -73,7 +78,7 @@ public:
     } else
     {
       mode_ = CompetitionMode::KSC;
-      current_state_ = State::EXCAVATING;
+      current_state_ = State::NAVIGATING_TO_FIRST_INTERMEDIATE;
       LOGGER_INFO(this->get_logger(), "KSC Mode");
     }
 
@@ -115,6 +120,14 @@ private:
         {
           current_state_ = State::NAVIGATING_TO_INTERMEDIATE;
         }
+        break;
+      case State::NAVIGATING_TO_FIRST_INTERMEDIATE:
+        request_navigation_to_first_intermediate();
+        current_state_ = State::IDLE;
+        break;
+      case State::ROTATING_AFTER_FIRST_INTERMEDIATE:
+        rotate_90_degrees();
+        current_state_ = State::NAVIGATING_TO_INTERMEDIATE;
         break;
       case State::NAVIGATING_TO_INTERMEDIATE:
         request_navigation_to_intermediate();
@@ -183,12 +196,12 @@ private:
     {
       if (mode_ == CompetitionMode::UCF)
       {
-        motor_cmd.left_wheel = -rotation_speed;
-        motor_cmd.right_wheel = -rotation_speed;
-      } else
-      {
         motor_cmd.left_wheel = rotation_speed;
         motor_cmd.right_wheel = rotation_speed;
+      } else
+      {
+        motor_cmd.left_wheel = -rotation_speed;
+        motor_cmd.right_wheel = -rotation_speed;
       }
       motor_cmd_publisher_->publish(motor_cmd);
 
@@ -207,7 +220,7 @@ private:
    */
   void request_excavation()
   {
-    if (!excavation_client_->wait_for_action_server(std::chrono::seconds(1)))
+    if (!excavation_client_->wait_for_action_server(std::chrono::seconds(30)))
     {
       LOGGER_WARN_ONCE(this->get_logger(), "Excavation action server not available.");
       return;
@@ -238,6 +251,74 @@ private:
     }
   }
 
+  void request_navigation_to_first_intermediate()
+  {
+    LOGGER_INFO(this->get_logger(), "Waiting for Nav2 action server to be ready...");
+    if (!navigation_client_->wait_for_action_server(std::chrono::seconds(30)))
+    {
+      LOGGER_FAILURE(this->get_logger(), "Navigation action server not available after 30s.");
+      return;
+    }
+
+    LOGGER_INFO(this->get_logger(), "Nav2 action server ready!");
+
+    auto goal_msg = NavigateToPose::Goal();
+    geometry_msgs::msg::Pose goal_pose;
+
+    goal_pose.position.x = first_intermediate_waypoint_x;
+    goal_pose.position.y = first_intermediate_waypoint_y;
+    goal_pose.orientation.x = 0.0;
+    goal_pose.orientation.y = 0.0;
+    goal_pose.orientation.z = 0.0;
+    goal_pose.orientation.w = 1.0;
+
+    goal_msg.pose.pose = goal_pose;
+    goal_msg.pose.header.stamp = this->now();
+    goal_msg.pose.header.frame_id = "map";
+
+    auto send_goal_options = rclcpp_action::Client<NavigateToPose>::SendGoalOptions();
+    send_goal_options.result_callback = std::bind(
+      &NavigationClient::handle_first_intermediate_navigation_result, this, std::placeholders::_1);
+    send_goal_options.feedback_callback = std::bind(
+      &NavigationClient::handle_first_intermediate_feedback, this, std::placeholders::_1,
+      std::placeholders::_2);
+
+    LOGGER_ACTION(
+      this->get_logger(), "Sending navigation goal to first intermediate waypoint [%.1f, %.1f]...",
+      first_intermediate_waypoint_x, first_intermediate_waypoint_y);
+    navigation_client_->async_send_goal(goal_msg, send_goal_options);
+  }
+
+  void handle_first_intermediate_feedback(
+    GoalHandleNavigate::SharedPtr, const std::shared_ptr<const NavigateToPose::Feedback> feedback)
+  {
+    LOGGER_INFO(
+      this->get_logger(), "Distance to first intermediate waypoint: %.2f meters",
+      feedback->distance_remaining);
+  }
+
+  void handle_first_intermediate_navigation_result(const GoalHandleNavigate::WrappedResult & result)
+  {
+    if (result.code == rclcpp_action::ResultCode::SUCCEEDED)
+    {
+      LOGGER_SUCCESS(
+        this->get_logger(), "First intermediate waypoint reached. Rotating 90 degrees...");
+      current_state_ = State::ROTATING_AFTER_FIRST_INTERMEDIATE;
+    } else if (result.code == rclcpp_action::ResultCode::ABORTED)
+    {
+      LOGGER_WARN(this->get_logger(), "First intermediate waypoint aborted, rotating anyway...");
+      current_state_ = State::ROTATING_AFTER_FIRST_INTERMEDIATE;
+    } else if (result.code == rclcpp_action::ResultCode::CANCELED)
+    {
+      LOGGER_WARN(this->get_logger(), "First intermediate waypoint canceled, rotating anyway...");
+      current_state_ = State::ROTATING_AFTER_FIRST_INTERMEDIATE;
+    } else
+    {
+      LOGGER_WARN(this->get_logger(), "First intermediate waypoint failed, rotating anyway...");
+      current_state_ = State::ROTATING_AFTER_FIRST_INTERMEDIATE;
+    }
+  }
+
   void request_navigation_to_intermediate()
   {
     LOGGER_INFO(this->get_logger(), "Waiting for Nav2 action server to be ready...");
@@ -256,8 +337,8 @@ private:
     goal_pose.position.y = intermediate_waypoint_y;
     goal_pose.orientation.x = 0.0;
     goal_pose.orientation.y = 0.0;
-    goal_pose.orientation.z = 1.0;
-    goal_pose.orientation.w = 0.0;
+    goal_pose.orientation.z = 0.7071068;
+    goal_pose.orientation.w = 0.7071068;
 
     goal_msg.pose.pose = goal_pose;
     goal_msg.pose.header.stamp = this->now();
@@ -339,8 +420,8 @@ private:
     goal_pose.position.y = construction_zone_y;
     goal_pose.orientation.x = 0.0;
     goal_pose.orientation.y = 0.0;
-    goal_pose.orientation.z = -0.7071068;
-    goal_pose.orientation.w = 0.7071068;
+    goal_pose.orientation.z = 1.0;
+    goal_pose.orientation.w = 0.0;
 
     goal_msg.pose.pose = goal_pose;
     goal_msg.pose.header.stamp = this->now();
@@ -401,7 +482,7 @@ private:
    */
   void request_depositing()
   {
-    if (!depositing_client_->wait_for_action_server(std::chrono::seconds(1)))
+    if (!depositing_client_->wait_for_action_server(std::chrono::seconds(30)))
     {
       LOGGER_WARN_ONCE(this->get_logger(), "Depositing action server not available.");
       return;

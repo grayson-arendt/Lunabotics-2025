@@ -476,17 +476,26 @@ class LunabotGUI(QMainWindow):
     def send_excavate_goal(self):
         if self.robot.is_excavating:
             self.robot.node.get_logger().info('Canceling excavation')
-            self.robot.cancel_excavate_goal(self.excavate_cancel_callback)
+            self.robot.cancel_excavate_goal(self._queue_excavate_cancel_callback)
         else:
             self.robot.is_excavating = True
             self.excavate_btn.setText("Cancel Excavation")
             self.excavate_btn.setStyleSheet(ACTION_BTN_ACTIVE_CSS)
             self._set_operation_status("Status: Excavating...", 'warning')
             self.robot.send_excavate_goal(
-                self.excavate_goal_response_callback,
-                self.excavate_result_callback,
-                self.excavate_cancel_callback,
+                self._queue_excavate_goal_response_callback,
+                self._queue_excavate_result_callback,
+                self._queue_excavate_cancel_callback,
             )
+
+    def _queue_excavate_goal_response_callback(self, goal_handle):
+        self._log_queue.put(('excavate_response', goal_handle))
+
+    def _queue_excavate_result_callback(self, future):
+        self._log_queue.put(('excavate_result', future))
+
+    def _queue_excavate_cancel_callback(self, future):
+        self._log_queue.put(('excavate_cancel', future))
 
     def excavate_goal_response_callback(self, goal_handle):
         if not goal_handle.accepted:
@@ -523,17 +532,26 @@ class LunabotGUI(QMainWindow):
     def send_deposit_goal(self):
         if self.robot.is_depositing:
             self.robot.node.get_logger().info('Canceling deposit')
-            self.robot.cancel_deposit_goal(self.deposit_cancel_callback)
+            self.robot.cancel_deposit_goal(self._queue_deposit_cancel_callback)
         else:
             self.robot.is_depositing = True
             self.deposit_btn.setText("Cancel Deposit")
             self.deposit_btn.setStyleSheet(ACTION_BTN_ACTIVE_CSS)
             self._set_operation_status("Status: Depositing...", 'warning')
             self.robot.send_deposit_goal(
-                self.deposit_goal_response_callback,
-                self.deposit_result_callback,
-                self.deposit_cancel_callback,
+                self._queue_deposit_goal_response_callback,
+                self._queue_deposit_result_callback,
+                self._queue_deposit_cancel_callback,
             )
+
+    def _queue_deposit_goal_response_callback(self, goal_handle):
+        self._log_queue.put(('deposit_response', goal_handle))
+
+    def _queue_deposit_result_callback(self, future):
+        self._log_queue.put(('deposit_result', future))
+
+    def _queue_deposit_cancel_callback(self, future):
+        self._log_queue.put(('deposit_cancel', future))
 
     def deposit_goal_response_callback(self, goal_handle):
         if not goal_handle.accepted:
@@ -809,6 +827,18 @@ class LunabotGUI(QMainWindow):
                     self.handle_control_state_update(data)
                 elif event_type == 'log':
                     self.append_log(data)
+                elif event_type == 'excavate_response':
+                    self.excavate_goal_response_callback(data)
+                elif event_type == 'excavate_result':
+                    self.excavate_result_callback(data)
+                elif event_type == 'excavate_cancel':
+                    self.excavate_cancel_callback(data)
+                elif event_type == 'deposit_response':
+                    self.deposit_goal_response_callback(data)
+                elif event_type == 'deposit_result':
+                    self.deposit_result_callback(data)
+                elif event_type == 'deposit_cancel':
+                    self.deposit_cancel_callback(data)
             except:
                 break
         

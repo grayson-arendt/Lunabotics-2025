@@ -132,8 +132,8 @@ class RobotInterface:
             'nav2': None
         }
         
-        self.excavation_client = ActionClient(self.node, Excavation, 'assisted_excavation_action')
-        self.depositing_client = ActionClient(self.node, Depositing, 'assisted_depositing_action')
+        self.excavation_client = ActionClient(self.node, Excavation, 'auto_excavation_action')
+        self.depositing_client = ActionClient(self.node, Depositing, 'auto_depositing_action')
         
         self.excavation_goal_handle = None
         self.depositing_goal_handle = None

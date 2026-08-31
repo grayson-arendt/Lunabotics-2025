@@ -209,7 +209,10 @@ def generate_launch_description():
         executable="bandwidth_monitor.py",
         name="bandwidth_monitor",
         output="screen",
-        parameters=[{'interface': 'wlo1'}],
+        parameters=[
+            gui_params_file,
+            {'interface': 'wlo1'},
+        ],
     )
 
     robot_state_publisher = Node(

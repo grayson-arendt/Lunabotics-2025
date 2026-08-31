@@ -1,14 +1,14 @@
 /**:
   ros__parameters:
-    use_imu_as_input: false
+    use_imu_as_input: true
     prop_at_freq_of_imu: true
-    check_satu: true
+    check_satu: false
     init_map_size: 10
-    point_filter_num: 4
+    point_filter_num: 2
     space_down_sample: true
-    filter_size_surf: 0.5
-    filter_size_map: 0.5
-    ivox_nearby_type: 6
+    filter_size_surf: 0.1
+    filter_size_map: 0.1
+    ivox_nearby_type: 18
     runtime_pos_log_enable: false
 
     common:
@@ -35,22 +35,23 @@
       imu_en: true
       extrinsic_est_en: false
       imu_time_inte: 0.005
-      lidar_time_inte: 0.1
+      lidar_time_inte: 0.005 #0.1
       satu_acc: 3.0
       satu_gyro: 35.0
       acc_norm: 1.0
-      lidar_meas_cov: 0.001
+      lidar_meas_cov: 0.001 #0.01
       acc_cov_output: 500.0
       gyr_cov_output: 1000.0
       b_acc_cov: 0.0001
       b_gyr_cov: 0.0001
-      imu_meas_acc_cov: 0.1
-      imu_meas_omg_cov: 0.1
+      imu_meas_acc_cov: 0.1 #0.01
+      imu_meas_omg_cov: 0.1 #0.01
       gyr_cov_input: 0.01
       acc_cov_input: 0.1
-      plane_thr: 0.1
+      plane_thr: 0.1 #0.05
       match_s: 81.0
-      ivox_grid_resolution: 0.5
+      ivox_grid_resolution: 0.5 # 2
+      gravity_align: true
       gravity: [0.0, 0.0, -9.810]
       gravity_init: [0.0, 0.0, -9.810]
       extrinsic_T: [0.0, 0.0, 0.0]

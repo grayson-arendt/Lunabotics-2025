@@ -17,9 +17,9 @@
 #include <thread>
 
 static constexpr double deposit_pos = 0.0;
-static constexpr double travel_pos = 0.7854;
+static constexpr double travel_pos = 1.0;
 static constexpr double deposit_seconds = 5.0;
-static constexpr int forward_seconds = 2;
+static constexpr int forward_seconds = 6;
 static constexpr double drive_speed = 0.3;
 
 /**
@@ -89,8 +89,8 @@ private:
         return false;
       }
 
-      motor_cmd.left_wheel = drive_speed;
-      motor_cmd.right_wheel = -drive_speed;
+      motor_cmd.left_wheel = -drive_speed;
+      motor_cmd.right_wheel = drive_speed;
       motor_cmd_publisher_->publish(motor_cmd);
 
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
